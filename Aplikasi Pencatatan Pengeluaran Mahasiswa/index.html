@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catatan Keuangan Mahasiswa</title>
+  
+  <!-- PWA CONFIG -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- PASTIKAN MENGGUNAKAN ./ -->
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div class="header-row">
+        <h1>💸 Catatan Keuangan Mahasiswa</h1>
+        <button id="themeToggle" class="theme-toggle" aria-label="Ganti tema">🌙</button>
+      </div>
+      <p>Catat pemasukan dan pengeluaran harianmu dengan mudah.</p>
+      
+      <div id="streakBadge" class="streak-badge hidden">
+        🔥 <span id="streakCount">0</span> Hari Streak!
+      </div>
+    </header>
+
+    <section class="summary">
+      <div class="card balance-card">
+        <span>Saldo</span>
+        <strong id="balance">Rp0</strong>
+      </div>
+      <div class="card income">
+        <span>Pemasukan</span>
+        <strong id="income">Rp0</strong>
+      </div>
+      <div class="card expense">
+        <span>Pengeluaran</span>
+        <strong id="expense">Rp0</strong>
+      </div>
+    </section>
+
+    <div id="comparisonBox" class="comparison-box"></div>
+
+    <section class="panel">
+      <h2>Tambah Transaksi</h2>
+      <form id="form">
+        <div class="row">
+          <select id="type" aria-label="Jenis transaksi">
+            <option value="expense">Pengeluaran</option>
+            <option value="income">Pemasukan</option>
+          </select>
+          <input type="date" id="date" required aria-label="Tanggal">
+        </div>
+        <input type="text" id="desc" placeholder="Keterangan (mis. Makan siang)" maxlength="60" required aria-label="Keterangan">
+        <div class="row">
+          <input type="number" id="amount" placeholder="Jumlah (Rp)" min="1" required aria-label="Jumlah">
+          <select id="category" aria-label="Kategori"></select>
+        </div>
+        <button type="submit" class="btn">Simpan</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>🎯 Budget Bulanan</h2>
+        <button id="toggleBudgetBtn" class="btn-small">Atur Budget</button>
+      </div>
+      
+      <form id="budgetForm" class="budget-form hidden">
+        <select id="budgetCategory" aria-label="Kategori budget"></select>
+        <input type="number" id="budgetAmount" placeholder="Batas (Rp)" min="1000" required>
+        <button type="submit" class="btn-small btn-primary">Set</button>
+      </form>
+
+      <div id="budgetList" class="budget-list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Riwayat</h2>
+        <button id="exportBtn" class="btn-small" aria-label="Export ke CSV">📥 Export CSV</button>
+      </div>
+      <div class="row">
+        <input type="month" id="filterMonth" aria-label="Filter bulan">
+        <select id="filterCategory" aria-label="Filter kategori"></select>
+      </div>
+      <ul id="list" class="list"></ul>
+      <p id="empty" class="empty">Belum ada transaksi. Yuk catat pengeluaran pertamamu 👇</p>
+    </section>
+
+    <section class="panel">
+      <h2>Pengeluaran per Kategori</h2>
+      <div id="breakdown" class="breakdown"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <span id="toastMsg">Transaksi dihapus</span>
+    <button id="undoBtn" class="toast-btn">Urungkan</button>
+  </div>
+
+  <!-- PASTIKAN MENGGUNAKAN ./ -->
+  <script src="./app.js"></script>
+
+  <!-- DAFTARKAN SERVICE WORKER (PWA) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        // Menggunakan ./sw.js agar aman di GitHub Pages
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('Service Worker berhasil didaftarkan.', reg.scope))
+          .catch((err) => console.log('Service Worker gagal didaftarkan.', err));
+      });
+    }
+  </script>
+</body>
+</html>
