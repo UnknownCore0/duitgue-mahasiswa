@@ -144,13 +144,13 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
 .legend-val { color: var(--muted); }
 
 /* =========================================
-   PERBAIKAN TOAST: TERSEMBUNYI SECARA DEFAULT
+   PERBAIKAN TOAST
    ========================================= */
 .toast { 
   position: fixed; 
   bottom: 1.25rem; 
   left: 50%; 
-  transform: translate(-50%, 120%); /* Sembunyikan ke bawah layar */
+  transform: translate(-50%, 120%); 
   background: #0f172a; 
   color: #fff; 
   padding: .75rem 1rem; 
@@ -162,18 +162,11 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
   transition: transform .3s ease; 
   z-index: 100; 
   font-size: .9rem;
-  opacity: 0; /* Tambahan pengaman agar tidak terlihat */
-  pointer-events: none; /* Tidak bisa diklik saat tersembunyi */
+  opacity: 0; 
+  pointer-events: none; 
 }
 [data-theme="dark"] .toast { background: #334155; }
-
-/* Hanya muncul jika ada class 'show' dari JavaScript */
-.toast.show { 
-  transform: translate(-50%, 0); 
-  opacity: 1;
-  pointer-events: auto; /* Bisa diklik saat muncul */
-}
-
+.toast.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
 .toast-btn { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: .4rem .8rem; font-weight: 700; cursor: pointer; font-size: .85rem; }
 
 .comparison-box { text-align: center; font-size: 0.85rem; margin-bottom: 1rem; padding: 0.6rem; border-radius: 12px; font-weight: 600; display: none; }
@@ -185,12 +178,38 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
 .streak-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, #ff7e5f, #feb47b); color: #fff; padding: 0.4rem 0.8rem; border-radius: 99px; font-size: 0.85rem; font-weight: 700; margin-top: 0.75rem; box-shadow: 0 4px 12px rgba(255, 126, 95, 0.3); }
 .streak-badge.hidden { display: none !important; }
 
+/* =========================================
+   MEDIA QUERY: KUNCI AGAR INPUT TANGGAL TIDAK MELEBAR
+   ========================================= */
 @media (max-width: 520px) {
   .summary { grid-template-columns: 1fr 1fr; }
   .row { grid-template-columns: 1fr; }
   .header-row h1 { font-size: 1.15rem; }
   .theme-toggle { width: 36px; height: 36px; }
   .budget-form { flex-direction: column; }
-  input, select { font-size: 16px !important; }
-  input[type="date"], input[type="month"] { text-align: center; height: 48px; }
+  
+  /* Paksa semua input dan select agar tidak bisa melebar */
+  input, select {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important; 
+    box-sizing: border-box !important;
+    display: block;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    font-size: 16px !important; 
+  }
+
+  /* Spesifik untuk input tanggal dan bulan */
+  input[type="date"], input[type="month"] {
+    text-align: center; 
+    height: 48px; 
+    padding: 0.6rem !important;
+  }
+  
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="month"]::-webkit-date-and-time-value {
+    text-align: center;
+  }
 }
