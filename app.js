@@ -208,7 +208,7 @@ $('exportBtn').addEventListener('click', () => {
   
   const link = document.createElement('a');
   link.href = url;
-  link.setAttribute('download', `Keuangan_Mahasiswa_${today}.csv`);
+  link.setAttribute('download', `DuitGue_${today}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -233,30 +233,7 @@ $('budgetForm').addEventListener('submit', e => {
   }
 });
 
-let pendingDelete = null; 
-const TOAST_DURATION = 5000;
-
-function showToast(msg, onUndo) {
-  const toast = $('toast');
-  $('toastMsg').textContent = msg;
-  toast.classList.add('show');
-
-  if (pendingDelete) clearTimeout(pendingDelete.timer);
-  pendingDelete = {
-    timer: setTimeout(() => {
-      toast.classList.remove('show');
-      pendingDelete = null;
-    }, TOAST_DURATION)
-  };
-
-  $('undoBtn').onclick = () => {
-    if(pendingDelete) clearTimeout(pendingDelete.timer);
-    toast.classList.remove('show');
-    onUndo();
-    pendingDelete = null;
-  };
-}
-
+// LOGIKA HAPUS & TOAST YANG SUDAH DISEDERHANAKAN
 $('list').addEventListener('click', e => {
   const btn = e.target.closest('.delete');
   if (!btn) return;
@@ -269,11 +246,24 @@ $('list').addEventListener('click', e => {
   saveData();
   render();
 
-  showToast(`"${removed.desc}" dihapus`, () => {
+  // Tampilkan Toast
+  const toast = $('toast');
+  $('toastMsg').textContent = `"${removed.desc}" dihapus`;
+  toast.classList.add('show');
+
+  // Sembunyikan setelah 5 detik
+  const timer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 5000);
+
+  // Tombol Undo
+  $('undoBtn').onclick = () => {
+    clearTimeout(timer);
+    toast.classList.remove('show');
     transactions.splice(index, 0, removed);
     saveData();
     render();
-  });
+  };
 });
 
 $('filterMonth').addEventListener('change', render);
@@ -293,9 +283,11 @@ function render() {
 
   const income = data.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const expense = data.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  
   $('income').textContent = rupiah(income);
   $('expense').textContent = rupiah(expense);
   $('balance').textContent = rupiah(income - expense);
+  $('difference').textContent = rupiah(income - expense);
 
   $('empty').style.display = data.length ? 'none' : 'block';
   $('list').innerHTML = data.map(t => `
