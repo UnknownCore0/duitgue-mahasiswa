@@ -1,6 +1,6 @@
-# 💸 Duitku - Catatan Keuangan Mahasiswa
+# 💸 DuitGue - Catatan Keuangan Mahasiswa
 
-**Duitku** adalah aplikasi *Progressive Web App* (PWA) pencatatan keuangan yang dirancang khusus untuk mahasiswa Gen Z. Aplikasi ini ringan, cepat, dan bisa di-*install* langsung ke layar utama HP (Android/iOS) tanpa perlu mengunduh dari App Store/Play Store.
+**DuitGue** adalah aplikasi *Progressive Web App* (PWA) pencatatan keuangan yang dirancang khusus untuk mahasiswa Gen Z. Aplikasi ini ringan, cepat, dan bisa di-*install* langsung ke layar utama HP (Android/iOS) tanpa perlu mengunduh dari App Store/Play Store.
 
 ## ✨ Fitur Utama
 
