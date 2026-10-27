@@ -28,7 +28,7 @@
 
 ## 🌐 Live Demo
 Kamu bisa mencoba aplikasinya secara langsung di sini: 
-**[https://duitku-mahasiswa.netlify.app/](https://duitku-mahasiswa.netlify.app/)** *(ganti dengan link Netlify/GitHub Pages milikmu)*
+**[[https://duitku-mahasiswa.netlify.app/](https://duitgue-mahasiswa.netlify.app/)]([https://duitku-mahasiswa.netlify.app/](https://unknowncore0.github.io/duitgue-mahasiswa/))** *(ganti dengan link Netlify/GitHub Pages milikmu)*
 
 ---
 *Dibuat untuk memenuhi tugas/proyek pribadi pengembangan web.*
