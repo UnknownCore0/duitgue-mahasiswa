@@ -14,14 +14,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Wajib naikkan versi ini setiap update -->
-  <link rel="stylesheet" href="./style.css?v=114">
+  <!-- Naikkan versi ini untuk memaksa update CSS -->
+  <link rel="stylesheet" href="./style.css?v=115">
 </head>
 <body>
   
   <main class="app-container">
     
-    <!-- TAB 1: TRANSAKSI -->
+    <!-- ================= TAB 1: TRANSAKSI ================= -->
     <section id="page-transaksi" class="page active">
       <header>
         <div class="header-row">
@@ -95,25 +95,25 @@
       </section>
     </section>
 
-    <!-- TAB 2: REKAP -->
+    <!-- ================= TAB 2: REKAP ================= -->
     <section id="page-rekap" class="page hidden">
       <header><h2>📊 Rekap</h2><p>Laporan keuanganmu ada di sini.</p></header>
       <div class="panel"><p class="empty">Halaman Rekap akan segera hadir (Fase 3).</p></div>
     </section>
 
-    <!-- TAB 3: HUTANG -->
+    <!-- ================= TAB 3: HUTANG ================= -->
     <section id="page-hutang" class="page hidden">
       <header><h2>🤝 Hutang</h2><p>Catat pinjaman dengan temanmu.</p></header>
       <div class="panel"><p class="empty">Halaman Hutang akan segera hadir (Fase 4).</p></div>
     </section>
 
-    <!-- TAB 4: IMPIAN -->
+    <!-- ================= TAB 4: IMPIAN ================= -->
     <section id="page-impian" class="page hidden">
       <header><h2>🎯 Impian</h2><p>Targetkan barang impianmu.</p></header>
       <div class="panel"><p class="empty">Halaman Impian akan segera hadir (Fase 4).</p></div>
     </section>
 
-    <!-- TAB 5: PROFIL -->
+    <!-- ================= TAB 5: PROFIL ================= -->
     <section id="page-profil" class="page hidden">
       <div class="profile-header" id="profileHeader">
         <div class="profile-avatar" id="profileAvatar">
@@ -158,8 +158,55 @@
       </div>
     </section>
 
+    <!-- ================= HALAMAN INFO UMUM (SUB-MENU) ================= -->
+    <section id="page-info-umum" class="page hidden">
+      <header class="sub-header">
+        <button class="back-btn" onclick="document.getElementById('page-info-umum').classList.add('hidden'); document.getElementById('page-profil').classList.remove('hidden');">‹</button>
+        <h2>ℹ️ Info Umum</h2>
+      </header>
+      
+      <div class="panel menu-list">
+        <button class="menu-item" id="btn-bantuan">
+          <div class="menu-icon bg-green">❓</div>
+          <div class="menu-text"><strong>Pusat Bantuan</strong><small>Hubungi admin via WhatsApp</small></div>
+          <span class="menu-arrow">›</span>
+        </button>
+        <div class="divider"></div>
+        <button class="menu-item" id="btn-privacy">
+          <div class="menu-icon bg-blue">🛡️</div>
+          <div class="menu-text"><strong>Privacy Notice</strong><small>Kebijakan privasi aplikasi</small></div>
+          <span class="menu-arrow">›</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= HALAMAN PRIVACY NOTICE ================= -->
+    <section id="page-privacy" class="page hidden">
+      <header class="sub-header">
+        <button class="back-btn" onclick="document.getElementById('page-privacy').classList.add('hidden'); document.getElementById('page-info-umum').classList.remove('hidden');">‹</button>
+        <h2>🛡️ Privacy Notice</h2>
+      </header>
+      
+      <div class="panel text-content">
+        <h3>Kebijakan Privasi Duit Gue</h3>
+        <p>Terakhir diperbarui: Oktober 2026</p>
+        <br>
+        <p>Duit Gue berkomitmen untuk melindungi privasi data penggunanya. Aplikasi ini dibuat untuk membantu mahasiswa mencatat keuangan secara mandiri.</p>
+        <br>
+        <h4>1. Penyimpanan Data</h4>
+        <p>Seluruh data transaksi, budget, dan profil Anda disimpan secara lokal di perangkat Anda (LocalStorage). Kami TIDAK memiliki server pusat dan TIDAK mengumpulkan data pribadi Anda ke internet.</p>
+        <br>
+        <h4>2. Keamanan</h4>
+        <p>Karena data disimpan di perangkat Anda, keamanan data bergantung pada keamanan perangkat Anda. Kami menyarankan Anda untuk rutin menggunakan fitur "Backup Data" agar data tidak hilang jika perangkat rusak atau cache terhapus.</p>
+        <br>
+        <h4>3. Perizinan</h4>
+        <p>Aplikasi ini tidak meminta akses ke kamera, mikrofon, atau lokasi Anda. Akses galeri hanya digunakan jika Anda secara sukarela mengganti foto profil.</p>
+      </div>
+    </section>
+
   </main>
 
+  <!-- NAVIGATION BOTTOM BAR -->
   <nav class="bottom-nav">
     <button class="nav-item active" data-target="page-transaksi"><span class="nav-icon">🏠</span><span class="nav-text">Transaksi</span></button>
     <button class="nav-item" data-target="page-rekap"><span class="nav-icon">📊</span><span class="nav-text">Rekap</span></button>
@@ -173,6 +220,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=114"></script>
+  <script src="./app.js?v=115"></script>
 </body>
 </html>
