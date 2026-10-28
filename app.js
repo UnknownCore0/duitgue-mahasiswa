@@ -76,7 +76,6 @@ function applyLanguage(lang) {
   document.querySelectorAll('.btn-lang').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
   });
-  renderChart(); // Render ulang grafik jika bahasa berubah
 }
 
 // SISTEM TEMA & WARNA GRADASI
@@ -390,7 +389,8 @@ document.querySelectorAll('.btn-lang').forEach(btn => {
 document.getElementById('btn-dana-statement').addEventListener('click', () => {
   document.getElementById('page-profil').classList.add('hidden');
   document.getElementById('page-dana-statement').classList.remove('hidden');
-  renderChart();
+  // Panggil renderChart SETELAH halaman ditampilkan
+  setTimeout(renderChart, 100);
 });
 document.getElementById('backToProfileFromDana').addEventListener('click', () => {
   document.getElementById('page-dana-statement').classList.add('hidden');
@@ -419,7 +419,7 @@ document.getElementById('btn-privacy').addEventListener('click', () => {
   document.getElementById('page-privacy').classList.remove('hidden');
 });
 
-// RENDER GRAFIK DANA STATEMENT (BULAN INI & LALU)
+// RENDER GRAFIK DANA STATEMENT
 function renderChart() {
   const chartContainer = document.getElementById('statChart');
   if (!chartContainer) return;
@@ -430,12 +430,12 @@ function renderChart() {
   const currentMonth = todayDate.getMonth();
 
   const monthsData = [];
-  // Looping 2 bulan terakhir (bulan lalu, bulan ini)
+  // Looping 2 bulan terakhir (bulan lalu dan bulan ini)
   for (let i = 1; i >= 0; i--) {
     const d = new Date(currentYear, currentMonth - i, 1);
     const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     
-    // Label menyesuaikan bahasa
+    // Label bulan menggunakan bahasa yang dipilih
     const label = d.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'short' });
     
     const inc = transactions.filter(t => t.type === 'income' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
@@ -444,6 +444,7 @@ function renderChart() {
     monthsData.push({ label, inc, exp });
   }
 
+  // Cari nilai maksimal untuk skala tinggi bar (minimal 1000 agar bar tidak terlalu tinggi jika data kecil)
   const maxVal = Math.max(...monthsData.flatMap(m => [m.inc, m.exp]), 1000);
 
   monthsData.forEach(data => {
@@ -452,7 +453,8 @@ function renderChart() {
 
     const barInc = document.createElement('div');
     barInc.className = 'chart-bar income';
-    barInc.style.height = `${Math.max((data.inc / maxVal) * 100, 2)}%`; // Minimal 2% agar tetap terlihat
+    // Berikan tinggi minimal 2% agar batang tetap terlihat meskipun nilainya 0
+    barInc.style.height = `${Math.max((data.inc / maxVal) * 100, 2)}%`;
     if (data.inc > 0) barInc.title = `Pemasukan: ${rupiah(data.inc)}`;
     
     const barExp = document.createElement('div');
