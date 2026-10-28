@@ -262,57 +262,30 @@ input[type="date"], input[type="month"] {
 .chart-bar.expense { background: var(--expense); }
 .chart-label { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
 
-/* =========================================
-   TOMBOL BACK (DIPERBESAR)
-   ========================================= */
-.sub-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  text-align: left;
-  padding-top: 0.5rem; /* Sedikit ruang di atas */
-}
+/* TOMBOL BACK */
+.sub-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; text-align: left; padding-top: 0.5rem; }
 .back-btn {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 50%; /* Dibuat bulat */
-  width: 45px; /* Lebih besar */
-  height: 45px;
-  font-size: 1.5rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--text);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 50%; width: 45px; height: 45px;
+  font-size: 1.5rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   transition: transform 0.2s, background 0.2s;
-  padding-bottom: 3px; /* Menyeimbangkan visual karakter ‹ */
+  padding-bottom: 3px;
 }
-.back-btn:active {
-  transform: scale(0.9);
-  background: var(--bg);
-}
-.sub-header h2 {
-  font-size: 1.3rem;
-  margin: 0;
-}
+.back-btn:active { transform: scale(0.9); background: var(--bg); }
+.sub-header h2 { font-size: 1.3rem; margin: 0; }
 .text-content h3 { margin-bottom: 0.5rem; }
 .text-content p { font-size: 0.9rem; line-height: 1.6; color: var(--muted); }
 .text-content h4 { margin-top: 1rem; margin-bottom: 0.3rem; font-size: 1rem; }
 
 /* =========================================
-   MEDIA QUERY MOBILE
+   MEDIA QUERY MOBILE (PENJINAKAN TOTAL)
    ========================================= */
 @media (max-width: 520px) {
   .summary { grid-template-columns: 1fr 1fr; }
-  
-  .row { 
-    grid-template-columns: minmax(0, 1fr); 
-    gap: 0.6rem;
-  }
-  
+  .row { grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
   .header-row h1 { font-size: 1.15rem; }
   .theme-toggle { width: 36px; height: 36px; }
   .budget-form { flex-direction: column; }
@@ -342,32 +315,4 @@ input[type="date"], input[type="month"] {
     padding: 0;
     margin-left: -10px;
   }
-}
-/* ... (kode CSS sebelumnya) ... */
-
-/* TRIK MENIMPA TEKS BULAN PADA INPUT TYPE MONTH */
-.month-wrapper {
-  position: relative;
-  width: 100%;
-  display: block;
-}
-
-/* Sembunyikan teks asli bawaan browser */
-input[type="month"]::-webkit-datetime-edit-text,
-input[type="month"]::-webkit-datetime-edit-month-field,
-input[type="month"]::-webkit-datetime-edit-year-field {
-  color: transparent !important; 
-}
-
-/* Tampilkan teks buatan kita (di atas input) */
-.custom-month-text {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none; /* Agar klik tetap masuk ke input tanggalnya */
-  font-size: 0.95rem;
-  color: var(--text);
-  z-index: 1;
 }

@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="./style.css?v=132">
+  <link rel="stylesheet" href="./style.css?v=134">
 </head>
 <body>
   
@@ -81,11 +81,8 @@
           <button id="exportBtn" class="btn-small" aria-label="Export ke CSV" data-lang="export">📥 Export</button>
         </div>
         <div class="row">
-          <!-- Trik: Kita sembunyikan teks asli input month dan timpa dengan div -->
-          <div class="month-wrapper">
-            <input type="month" id="filterMonth" aria-label="Filter bulan">
-            <div id="customMonthDisplay" class="custom-month-text">Oktober 2026</div>
-          </div>
+          <!-- Kembali ke input type month biasa -->
+          <input type="month" id="filterMonth" aria-label="Filter bulan">
           <select id="filterCategory" aria-label="Filter kategori"></select>
         </div>
         <ul id="list" class="list"></ul>
@@ -287,6 +284,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=132"></script>
+  <script src="./app.js?v=134"></script>
 </body>
 </html>
