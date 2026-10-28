@@ -263,12 +263,51 @@ input[type="date"], input[type="month"] {
 .chart-label { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
 
 /* =========================================
-   MEDIA QUERY MOBILE (TRIK PEMOTONG PAKSA)
+   TOMBOL BACK (DIPERBESAR)
+   ========================================= */
+.sub-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  padding-top: 0.5rem; /* Sedikit ruang di atas */
+}
+.back-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 50%; /* Dibuat bulat */
+  width: 45px; /* Lebih besar */
+  height: 45px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.2s, background 0.2s;
+  padding-bottom: 3px; /* Menyeimbangkan visual karakter ‹ */
+}
+.back-btn:active {
+  transform: scale(0.9);
+  background: var(--bg);
+}
+.sub-header h2 {
+  font-size: 1.3rem;
+  margin: 0;
+}
+.text-content h3 { margin-bottom: 0.5rem; }
+.text-content p { font-size: 0.9rem; line-height: 1.6; color: var(--muted); }
+.text-content h4 { margin-top: 1rem; margin-bottom: 0.3rem; font-size: 1rem; }
+
+/* =========================================
+   MEDIA QUERY MOBILE
    ========================================= */
 @media (max-width: 520px) {
   .summary { grid-template-columns: 1fr 1fr; }
   
-  /* Ubah baris jadi 1 kolom & paksa minmax 0 agar tidak meluber */
   .row { 
     grid-template-columns: minmax(0, 1fr); 
     gap: 0.6rem;
@@ -278,7 +317,6 @@ input[type="date"], input[type="month"] {
   .theme-toggle { width: 36px; height: 36px; }
   .budget-form { flex-direction: column; }
   
-  /* Paksa semua input agar benar-benar 100% dari parent */
   input, select {
     font-size: 16px !important; 
     width: 100% !important;
@@ -288,7 +326,6 @@ input[type="date"], input[type="month"] {
     display: block;
   }
 
-  /* Spesifik untuk input tanggal dan bulan */
   input[type="date"], input[type="month"] {
     text-align: center; 
     height: 48px; 
@@ -297,7 +334,6 @@ input[type="date"], input[type="month"] {
     appearance: none;
   }
 
-  /* Sembunyikan indikator kalender yang bikin lebar */
   input[type="date"]::-webkit-calendar-picker-indicator,
   input[type="month"]::-webkit-calendar-picker-indicator {
     opacity: 0.5;
