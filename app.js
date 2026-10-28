@@ -43,7 +43,9 @@ const TRANSLATIONS = {
     theme_skin: 'Tema (Skin)', theme_desc: 'Ubah warna tampilan aplikasi', language: 'Bahasa', language_desc: 'Ganti bahasa aplikasi',
     backup_data: 'Backup Data', backup_desc: 'Simpan data ke file .json', restore_data: 'Restore Data', restore_desc: 'Pulihkan data dari file .json',
     info: 'Info Umum', info_desc: 'Tentang aplikasi & versi',
-    nav_home: 'Transaksi', nav_rekap: 'Rekap', nav_hutang: 'Hutang', nav_impian: 'Impian', nav_profil: 'Profil'
+    nav_home: 'Transaksi', nav_rekap: 'Rekap', nav_hutang: 'Hutang', nav_impian: 'Impian', nav_profil: 'Profil',
+    choose_color: 'Pilih Warna Gradasi', chart_title: 'Grafik 2 Bulan Terakhir',
+    help_center: 'Pusat Bantuan', help_desc: 'Hubungi admin via WhatsApp', privacy_notice: 'Privacy Notice', privacy_desc: 'Kebijakan privasi aplikasi'
   },
   en: {
     app_desc: 'Record your daily income and expenses easily.',
@@ -55,7 +57,9 @@ const TRANSLATIONS = {
     theme_skin: 'Theme (Skin)', theme_desc: 'Change app color theme', language: 'Language', language_desc: 'Change app language',
     backup_data: 'Backup Data', backup_desc: 'Save data to .json file', restore_data: 'Restore Data', restore_desc: 'Restore data from .json file',
     info: 'General Info', info_desc: 'About app & version',
-    nav_home: 'Transaction', nav_rekap: 'Summary', nav_hutang: 'Debt', nav_impian: 'Dream', nav_profil: 'Profile'
+    nav_home: 'Transaction', nav_rekap: 'Summary', nav_hutang: 'Debt', nav_impian: 'Dream', nav_profil: 'Profile',
+    choose_color: 'Choose Gradient Color', chart_title: 'Last 2 Months Chart',
+    help_center: 'Help Center', help_desc: 'Contact admin via WhatsApp', privacy_notice: 'Privacy Notice', privacy_desc: 'Application privacy policy'
   }
 };
 
@@ -72,6 +76,7 @@ function applyLanguage(lang) {
   document.querySelectorAll('.btn-lang').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
   });
+  renderChart(); // Render ulang grafik jika bahasa berubah
 }
 
 // SISTEM TEMA & WARNA GRADASI
@@ -414,9 +419,10 @@ document.getElementById('btn-privacy').addEventListener('click', () => {
   document.getElementById('page-privacy').classList.remove('hidden');
 });
 
-// RENDER GRAFIK DANA STATEMENT
+// RENDER GRAFIK DANA STATEMENT (BULAN INI & LALU)
 function renderChart() {
   const chartContainer = document.getElementById('statChart');
+  if (!chartContainer) return;
   chartContainer.innerHTML = ''; 
 
   const todayDate = new Date();
@@ -424,10 +430,13 @@ function renderChart() {
   const currentMonth = todayDate.getMonth();
 
   const monthsData = [];
+  // Looping 2 bulan terakhir (bulan lalu, bulan ini)
   for (let i = 1; i >= 0; i--) {
     const d = new Date(currentYear, currentMonth - i, 1);
     const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const label = d.toLocaleDateString('id-ID', { month: 'short' });
+    
+    // Label menyesuaikan bahasa
+    const label = d.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'short' });
     
     const inc = transactions.filter(t => t.type === 'income' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
     const exp = transactions.filter(t => t.type === 'expense' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
@@ -443,12 +452,12 @@ function renderChart() {
 
     const barInc = document.createElement('div');
     barInc.className = 'chart-bar income';
-    barInc.style.height = `${(data.inc / maxVal) * 100}%`;
+    barInc.style.height = `${Math.max((data.inc / maxVal) * 100, 2)}%`; // Minimal 2% agar tetap terlihat
     if (data.inc > 0) barInc.title = `Pemasukan: ${rupiah(data.inc)}`;
     
     const barExp = document.createElement('div');
     barExp.className = 'chart-bar expense';
-    barExp.style.height = `${(data.exp / maxVal) * 100}%`;
+    barExp.style.height = `${Math.max((data.exp / maxVal) * 100, 2)}%`;
     if (data.exp > 0) barExp.title = `Pengeluaran: ${rupiah(data.exp)}`;
 
     const label = document.createElement('div');

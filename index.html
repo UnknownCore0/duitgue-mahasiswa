@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Naikkan versi ini untuk memaksa update CSS (v120) -->
-  <link rel="stylesheet" href="./style.css?v=120">
+  <!-- Naikkan versi ini untuk memaksa update CSS (v122) -->
+  <link rel="stylesheet" href="./style.css?v=122">
 </head>
 <body>
   
@@ -177,11 +177,11 @@
     <section id="page-theme" class="page hidden">
       <header class="sub-header">
         <button class="back-btn" id="backToProfileFromTheme">‹</button>
-        <h2>🎨 Tema (Skin)</h2>
+        <h2 data-lang="theme_skin">🎨 Tema (Skin)</h2>
       </header>
       
       <div class="panel">
-        <h3 style="font-size: 1rem; margin-bottom: 1rem;">Pilih Warna Gradasi</h3>
+        <h3 style="font-size: 1rem; margin-bottom: 1rem;" data-lang="choose_color">Pilih Warna Gradasi</h3>
         <div class="color-picker">
           <button class="color-opt" data-color="indigo" style="background: linear-gradient(135deg, #6366f1, #a855f7);"></button>
           <button class="color-opt" data-color="emerald" style="background: linear-gradient(135deg, #10b981, #059669);"></button>
@@ -196,7 +196,7 @@
     <section id="page-language" class="page hidden">
       <header class="sub-header">
         <button class="back-btn" id="backToProfileFromLang">‹</button>
-        <h2>🌐 Bahasa</h2>
+        <h2 data-lang="language">🌐 Bahasa</h2>
       </header>
       
       <div class="panel">
@@ -215,13 +215,13 @@
       </header>
       
       <div class="panel">
-        <h3 style="font-size: 1rem; margin-bottom: 1rem;">Grafik 2 Bulan Terakhir</h3>
+        <h3 style="font-size: 1rem; margin-bottom: 1rem;" data-lang="chart_title">Grafik 2 Bulan Terakhir</h3>
         <div class="chart-container">
           <div class="chart-bars" id="statChart"></div>
         </div>
         <div class="chart-legend" style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; font-size: 0.8rem;">
-          <div><span style="display:inline-block; width:10px; height:10px; background:var(--income); border-radius:50%;"></span> Pemasukan</div>
-          <div><span style="display:inline-block; width:10px; height:10px; background:var(--expense); border-radius:50%;"></span> Pengeluaran</div>
+          <div><span style="display:inline-block; width:10px; height:10px; background:var(--income); border-radius:50%;"></span> <span data-lang="income">Pemasukan</span></div>
+          <div><span style="display:inline-block; width:10px; height:10px; background:var(--expense); border-radius:50%;"></span> <span data-lang="expense">Pengeluaran</span></div>
         </div>
       </div>
     </section>
@@ -230,18 +230,18 @@
     <section id="page-info-umum" class="page hidden">
       <header class="sub-header">
         <button class="back-btn" id="backToProfile">‹</button>
-        <h2>ℹ️ Info Umum</h2>
+        <h2 data-lang="info">ℹ️ Info Umum</h2>
       </header>
       <div class="panel menu-list">
         <button class="menu-item" id="btn-bantuan">
           <div class="menu-icon bg-green">❓</div>
-          <div class="menu-text"><strong>Pusat Bantuan</strong><small>Hubungi admin via WhatsApp</small></div>
+          <div class="menu-text"><strong data-lang="help_center">Pusat Bantuan</strong><small data-lang="help_desc">Hubungi admin via WhatsApp</small></div>
           <span class="menu-arrow">›</span>
         </button>
         <div class="divider"></div>
         <button class="menu-item" id="btn-privacy">
           <div class="menu-icon bg-blue">🛡️</div>
-          <div class="menu-text"><strong>Privacy Notice</strong><small>Kebijakan privasi aplikasi</small></div>
+          <div class="menu-text"><strong data-lang="privacy_notice">Privacy Notice</strong><small data-lang="privacy_desc">Kebijakan privasi aplikasi</small></div>
           <span class="menu-arrow">›</span>
         </button>
       </div>
@@ -251,7 +251,7 @@
     <section id="page-privacy" class="page hidden">
       <header class="sub-header">
         <button class="back-btn" id="backToInfo">‹</button>
-        <h2>🛡️ Privacy Notice</h2>
+        <h2 data-lang="privacy_notice">🛡️ Privacy Notice</h2>
       </header>
       <div class="panel text-content">
         <h3>Kebijakan Privasi Duit Gue</h3>
@@ -286,6 +286,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=120"></script>
+  <script src="./app.js?v=122"></script>
 </body>
 </html>
