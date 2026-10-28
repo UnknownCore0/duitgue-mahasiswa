@@ -14,8 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Naikkan versi ini untuk memaksa update CSS -->
-  <link rel="stylesheet" href="./style.css?v=115">
+  <link rel="stylesheet" href="./style.css?v=116">
 </head>
 <body>
   
@@ -95,19 +94,17 @@
       </section>
     </section>
 
-    <!-- ================= TAB 2: REKAP ================= -->
+    <!-- ================= TAB LAINNYA ================= -->
     <section id="page-rekap" class="page hidden">
       <header><h2>📊 Rekap</h2><p>Laporan keuanganmu ada di sini.</p></header>
       <div class="panel"><p class="empty">Halaman Rekap akan segera hadir (Fase 3).</p></div>
     </section>
 
-    <!-- ================= TAB 3: HUTANG ================= -->
     <section id="page-hutang" class="page hidden">
       <header><h2>🤝 Hutang</h2><p>Catat pinjaman dengan temanmu.</p></header>
       <div class="panel"><p class="empty">Halaman Hutang akan segera hadir (Fase 4).</p></div>
     </section>
 
-    <!-- ================= TAB 4: IMPIAN ================= -->
     <section id="page-impian" class="page hidden">
       <header><h2>🎯 Impian</h2><p>Targetkan barang impianmu.</p></header>
       <div class="panel"><p class="empty">Halaman Impian akan segera hadir (Fase 4).</p></div>
@@ -150,6 +147,7 @@
           <span class="menu-arrow">›</span>
         </button>
         <div class="divider"></div>
+        <!-- Tombol Info Umum -->
         <button class="menu-item" id="btn-info">
           <div class="menu-icon bg-purple">ℹ️</div>
           <div class="menu-text"><strong>Info Umum</strong><small>Tentang aplikasi & versi</small></div>
@@ -158,10 +156,10 @@
       </div>
     </section>
 
-    <!-- ================= HALAMAN INFO UMUM (SUB-MENU) ================= -->
+    <!-- ================= HALAMAN INFO UMUM ================= -->
     <section id="page-info-umum" class="page hidden">
       <header class="sub-header">
-        <button class="back-btn" onclick="document.getElementById('page-info-umum').classList.add('hidden'); document.getElementById('page-profil').classList.remove('hidden');">‹</button>
+        <button class="back-btn" id="backToProfile">‹</button>
         <h2>ℹ️ Info Umum</h2>
       </header>
       
@@ -183,7 +181,7 @@
     <!-- ================= HALAMAN PRIVACY NOTICE ================= -->
     <section id="page-privacy" class="page hidden">
       <header class="sub-header">
-        <button class="back-btn" onclick="document.getElementById('page-privacy').classList.add('hidden'); document.getElementById('page-info-umum').classList.remove('hidden');">‹</button>
+        <button class="back-btn" id="backToInfo">‹</button>
         <h2>🛡️ Privacy Notice</h2>
       </header>
       
@@ -220,6 +218,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=115"></script>
+  <script src="./app.js?v=116"></script>
 </body>
 </html>

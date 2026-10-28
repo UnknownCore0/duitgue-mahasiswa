@@ -278,9 +278,7 @@ document.getElementById('btn-backup').addEventListener('click', () => {
 });
 
 const restoreInput = document.getElementById('restoreInput');
-document.getElementById('btn-restore').addEventListener('click', () => {
-  restoreInput.click();
-});
+document.getElementById('btn-restore').addEventListener('click', () => { restoreInput.click(); });
 
 restoreInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
@@ -290,44 +288,46 @@ restoreInput.addEventListener('change', (e) => {
       try {
         const parsedData = JSON.parse(event.target.result);
         if (parsedData.transactions && parsedData.profile) {
-          // Paksa Restore Data
           localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData.transactions));
           localStorage.setItem(BUDGET_KEY, JSON.stringify(parsedData.budgets || {}));
           localStorage.setItem(STREAK_KEY, JSON.stringify(parsedData.streak || { count: 0, lastDate: null }));
           localStorage.setItem(PROFILE_KEY, JSON.stringify(parsedData.profile));
           alert('Data berhasil dipulihkan! Halaman akan dimuat ulang.');
           window.location.reload();
-        } else {
-          alert('Format file backup tidak valid.');
-        }
-      } catch (err) {
-        alert('Gagal membaca file. Pastikan file berekstensi .json dari aplikasi Duit Gue.');
-      }
+        } else { alert('Format file backup tidak valid.'); }
+      } catch (err) { alert('Gagal membaca file. Pastikan file berekstensi .json dari aplikasi Duit Gue.'); }
     };
     reader.readAsText(file);
   }
 });
 
-// Placeholder Menu Profil Lainnya
-document.getElementById('btn-dana-statement').addEventListener('click', () => alert('Fitur Dana Statement akan dibuat di Langkah 2.4'));
-document.getElementById('btn-info').addEventListener('click', () => alert('Duit Gue v1.0 - Dibuat oleh Mahasiswa Gen Z'));
-// ================= LOGIKA SUB-MENU INFO UMUM =================
-// Buka Halaman Info Umum
+// ================= SUB-MENU INFO UMUM =================
 document.getElementById('btn-info').addEventListener('click', () => {
   document.getElementById('page-profil').classList.add('hidden');
   document.getElementById('page-info-umum').classList.remove('hidden');
 });
 
-// Pusat Bantuan (WA)
+document.getElementById('backToProfile').addEventListener('click', () => {
+  document.getElementById('page-info-umum').classList.add('hidden');
+  document.getElementById('page-profil').classList.remove('hidden');
+});
+
+document.getElementById('backToInfo').addEventListener('click', () => {
+  document.getElementById('page-privacy').classList.add('hidden');
+  document.getElementById('page-info-umum').classList.remove('hidden');
+});
+
 document.getElementById('btn-bantuan').addEventListener('click', () => {
-  // Ganti angka 6281234567890 dengan nomor WA kamu (awali dengan 62)
+  // GANTI DENGAN NOMOR WA KAMU (Awali dengan 62)
   const waNumber = '6281992053002'; 
   const waMessage = encodeURIComponent('Halo Admin Duit Gue, saya butuh bantuan terkait aplikasi.');
   window.open(`https://wa.me/${waNumber}?text=${waMessage}`, '_blank');
 });
 
-// Privacy Notice
 document.getElementById('btn-privacy').addEventListener('click', () => {
   document.getElementById('page-info-umum').classList.add('hidden');
   document.getElementById('page-privacy').classList.remove('hidden');
 });
+
+// Hapus atau timpa event lama untuk btn-info agar tidak memunculkan alert lama
+// (Kode ini dipastikan sudah menghapus logika alert('Duit Gue v1.0...') yang lama)
