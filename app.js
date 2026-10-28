@@ -381,10 +381,10 @@ document.querySelectorAll('.btn-lang').forEach(btn => {
 // KHUSUS DANA STATEMENT
 document.getElementById('btn-dana-statement').addEventListener('click', () => {
   showPage('page-dana-statement');
-  // Beri jeda sedikit (100ms) agar DOM sepenuhnya terlihat, baru gambar grafiknya
+  // Beri jeda sedikit (50ms) agar DOM sepenuhnya terlihat, baru gambar grafiknya
   setTimeout(() => {
     renderChart();
-  }, 100); 
+  }, 50); 
 });
 document.getElementById('backToProfileFromDana').addEventListener('click', () => showPage('page-profil'));
 
@@ -398,7 +398,7 @@ document.getElementById('btn-bantuan').addEventListener('click', () => {
 });
 document.getElementById('btn-privacy').addEventListener('click', () => showPage('page-privacy'));
 
-// FUNGSI RENDER GRAFIK
+// FUNGSI RENDER GRAFIK (SUDAH DIPERBAIKI)
 function renderChart() {
   const chartContainer = document.getElementById('statChart');
   if (!chartContainer) return;
@@ -414,7 +414,6 @@ function renderChart() {
     const d = new Date(currentYear, currentMonth - i, 1);
     const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     
-    // Label bahasa
     const label = d.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'short' });
     
     const inc = transactions.filter(t => t.type === 'income' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
@@ -423,7 +422,7 @@ function renderChart() {
     monthsData.push({ label, inc, exp });
   }
 
-  const maxVal = Math.max(...monthsData.flatMap(m => [m.inc, m.exp]), 1000);
+  const maxVal = Math.max(...monthsData.flatMap(m => [m.inc, m.exp]), 10000);
 
   monthsData.forEach(data => {
     const group = document.createElement('div');
@@ -431,12 +430,14 @@ function renderChart() {
 
     const barInc = document.createElement('div');
     barInc.className = 'chart-bar income';
-    barInc.style.height = `${Math.max((data.inc / maxVal) * 100, 2)}%`; 
+    const heightInc = data.inc > 0 ? (data.inc / maxVal) * 100 : 0;
+    barInc.style.height = `${Math.max(heightInc, 2)}%`; 
     if (data.inc > 0) barInc.title = `Pemasukan: ${rupiah(data.inc)}`;
     
     const barExp = document.createElement('div');
     barExp.className = 'chart-bar expense';
-    barExp.style.height = `${Math.max((data.exp / maxVal) * 100, 2)}%`;
+    const heightExp = data.exp > 0 ? (data.exp / maxVal) * 100 : 0;
+    barExp.style.height = `${Math.max(heightExp, 2)}%`;
     if (data.exp > 0) barExp.title = `Pengeluaran: ${rupiah(data.exp)}`;
 
     const label = document.createElement('div');
