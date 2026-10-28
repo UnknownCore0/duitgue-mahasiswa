@@ -467,3 +467,21 @@ document.querySelectorAll('.nav-item').forEach(btn => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
+
+// ================= LOGIKA MENU PROFIL (FASE 2) =================
+// Event listener ini disiapkan untuk langkah selanjutnya
+document.getElementById('btn-dana-statement').addEventListener('click', () => {
+  alert('Fitur Dana Statement akan dibuat di Langkah 2.4');
+});
+
+document.getElementById('btn-backup').addEventListener('click', () => {
+  alert('Fitur Backup akan dibuat di Langkah 2.3');
+});
+
+document.getElementById('btn-restore').addEventListener('click', () => {
+  alert('Fitur Restore akan dibuat di Langkah 2.3');
+});
+
+document.getElementById('btn-info').addEventListener('click', () => {
+  alert('Duit Gue v1.0 - Dibuat oleh Mahasiswa Gen Z');
+});

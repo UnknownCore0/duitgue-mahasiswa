@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Cache Busting: Naikkan versi ini setiap kali ubah CSS -->
-  <link rel="stylesheet" href="./style.css?v=110">
+  <!-- Naikkan versi ini untuk memaksa update CSS -->
+  <link rel="stylesheet" href="./style.css?v=111">
 </head>
 <body>
   
@@ -134,15 +134,69 @@
 
     <!-- ================= TAB 5: PROFIL ================= -->
     <section id="page-profil" class="page hidden">
-      <header><h2>👤 Profil</h2><p>Pengaturan dan pusat kendali aplikasi.</p></header>
-      <div class="panel">
-        <p class="empty">Halaman Profil akan segera hadir (Fase 2).</p>
+      
+      <!-- Header Profil -->
+      <div class="profile-header">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-info">
+          <h2>Halo, Mahasiswa!</h2>
+          <p>Atur aplikasi Duit Gue kamu di sini.</p>
+        </div>
       </div>
+
+      <!-- Menu List Profil -->
+      <div class="panel menu-list">
+        
+        <!-- Dana Statement -->
+        <button class="menu-item" id="btn-dana-statement">
+          <div class="menu-icon bg-blue">📊</div>
+          <div class="menu-text">
+            <strong>Dana Statement</strong>
+            <small>Lihat ringkasan & grafik bulanan</small>
+          </div>
+          <span class="menu-arrow">›</span>
+        </button>
+
+        <div class="divider"></div>
+
+        <!-- Backup Data -->
+        <button class="menu-item" id="btn-backup">
+          <div class="menu-icon bg-green">💾</div>
+          <div class="menu-text">
+            <strong>Backup Data</strong>
+            <small>Simpan data ke file .json</small>
+          </div>
+          <span class="menu-arrow">›</span>
+        </button>
+
+        <!-- Restore Data -->
+        <button class="menu-item" id="btn-restore">
+          <div class="menu-icon bg-orange">📂</div>
+          <div class="menu-text">
+            <strong>Restore Data</strong>
+            <small>Pulihkan data dari file .json</small>
+          </div>
+          <span class="menu-arrow">›</span>
+        </button>
+
+        <div class="divider"></div>
+
+        <!-- Info Umum -->
+        <button class="menu-item" id="btn-info">
+          <div class="menu-icon bg-purple">ℹ️</div>
+          <div class="menu-text">
+            <strong>Info Umum</strong>
+            <small>Tentang aplikasi & versi</small>
+          </div>
+          <span class="menu-arrow">›</span>
+        </button>
+      </div>
+      
     </section>
 
   </main>
 
-  <!-- NAVIGATION BOTTOM BAR (FASE 1) -->
+  <!-- NAVIGATION BOTTOM BAR -->
   <nav class="bottom-nav">
     <button class="nav-item active" data-target="page-transaksi">
       <span class="nav-icon">🏠</span>
@@ -172,19 +226,7 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=110"></script>
+  <script src="./app.js?v=111"></script>
 
-  <!-- SERVICE WORKER DIMATIKAN SEMENTARA UNTUK FASE 1 -->
-  <!-- 
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('Service Worker berhasil.', reg.scope))
-          .catch((err) => console.log('Service Worker gagal.', err));
-      });
-    }
-  </script>
-  -->
 </body>
 </html>
