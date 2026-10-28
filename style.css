@@ -80,15 +80,33 @@ header p { color: var(--muted); }
 form { display: grid; gap: .6rem; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
 
-/* INPUT STRICT RULES */
+/* =========================================
+   INPUT STRICT RULES (ANTI MELUBER TOTAL)
+   ========================================= */
 input, select {
-  width: 100% !important; max-width: 100% !important; min-width: 0 !important;
-  padding: .7rem .9rem; border: 1px solid var(--border);
-  border-radius: 10px; font-size: .95rem; font-family: inherit;
-  background: var(--card); color: var(--text);
+  width: 100% !important; 
+  max-width: 100% !important; 
+  min-width: 0 !important;
+  padding: .7rem .9rem; 
+  border: 1px solid var(--border);
+  border-radius: 10px; 
+  font-size: .95rem; 
+  font-family: inherit;
+  background: var(--card); 
+  color: var(--text);
   box-sizing: border-box !important;
+  display: block;
 }
 input:focus, select:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+/* Kunci Mati Khusus Input Date & Month di HP */
+input[type="date"], input[type="month"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  text-align: center;
+  height: 48px;
+}
 
 .btn {
   padding: .8rem; background: linear-gradient(135deg, var(--primary), var(--primary-2));
@@ -212,41 +230,16 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
 .menu-arrow { font-size: 1.2rem; color: var(--muted); }
 .divider { height: 1px; background: var(--border); margin: 0.2rem 0; }
 
-/* ================= CUSTOM SKIN GRADASI ================= */
-[data-color="emerald"] { 
-  --primary: #10b981; --primary-2: #059669;
-  --bg: #ecfdf5; 
-}
-[data-theme="dark"][data-color="emerald"] { 
-  --primary: #34d399; --primary-2: #10b981;
-  --bg: #022c22; 
-}
-[data-color="blue"] { 
-  --primary: #3b82f6; --primary-2: #1d4ed8;
-  --bg: #eff6ff; 
-}
-[data-theme="dark"][data-color="blue"] { 
-  --primary: #60a5fa; --primary-2: #3b82f6;
-  --bg: #172554; 
-}
-[data-color="pink"] { 
-  --primary: #ec4899; --primary-2: #be185d;
-  --bg: #fdf2f8; 
-}
-[data-theme="dark"][data-color="pink"] { 
-  --primary: #f472b6; --primary-2: #ec4899;
-  --bg: #500724; 
-}
-[data-color="orange"] { 
-  --primary: #f97316; --primary-2: #ea580c;
-  --bg: #fff7ed; 
-}
-[data-theme="dark"][data-color="orange"] { 
-  --primary: #fb923c; --primary-2: #f97316;
-  --bg: #431407; 
-}
+/* CUSTOM SKIN GRADASI */
+[data-color="emerald"] { --primary: #10b981; --primary-2: #059669; --bg: #ecfdf5; }
+[data-theme="dark"][data-color="emerald"] { --primary: #34d399; --primary-2: #10b981; --bg: #022c22; }
+[data-color="blue"] { --primary: #3b82f6; --primary-2: #1d4ed8; --bg: #eff6ff; }
+[data-theme="dark"][data-color="blue"] { --primary: #60a5fa; --primary-2: #3b82f6; --bg: #172554; }
+[data-color="pink"] { --primary: #ec4899; --primary-2: #be185d; --bg: #fdf2f8; }
+[data-theme="dark"][data-color="pink"] { --primary: #f472b6; --primary-2: #ec4899; --bg: #500724; }
+[data-color="orange"] { --primary: #f97316; --primary-2: #ea580c; --bg: #fff7ed; }
+[data-theme="dark"][data-color="orange"] { --primary: #fb923c; --primary-2: #f97316; --bg: #431407; }
 
-/* Color Picker Buttons */
 .color-picker { display: flex; gap: 1rem; flex-wrap: wrap; }
 .color-opt {
   width: 45px; height: 45px; border-radius: 50%;
@@ -257,50 +250,51 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
 .color-opt:active { transform: scale(0.9); }
 .color-opt.active { border-color: var(--text); transform: scale(1.1); }
 
-/* ================= DANA STATEMENT CHART (DIPERBAIKI) ================= */
-.chart-container {
-  height: 200px; 
-  display: flex; 
-  align-items: flex-end; 
-  justify-content: space-around; 
-  padding-bottom: 1rem; 
-  border-bottom: 2px solid var(--border); 
-  margin-top: 1rem;
-  width: 100%;
-}
-
-.chart-bars {
-  display: flex;
-  justify-content: space-around;
-  align-items: flex-end;
-  width: 100%;
-  height: 100%; /* KUNCI UTAMA AGAR BATANG BISA TUMBUH */
-}
-
-.chart-bar-group { 
-  display: flex; gap: 8px; align-items: flex-end; height: 100%; position: relative;
-}
-
-.chart-bar {
-  width: 30px; border-radius: 6px 6px 0 0;
-  transition: height 0.5s ease; 
-  min-height: 2px;
-}
+/* DANA STATEMENT CHART */
+.chart-container { height: 200px; display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 1rem; border-bottom: 2px solid var(--border); margin-top: 1rem; width: 100%; }
+.chart-bars { display: flex; justify-content: space-around; align-items: flex-end; width: 100%; height: 100%; }
+.chart-bar-group { display: flex; gap: 8px; align-items: flex-end; height: 100%; position: relative; }
+.chart-bar { width: 30px; border-radius: 6px 6px 0 0; transition: height 0.5s ease; min-height: 2px; }
 .chart-bar.income { background: var(--income); }
 .chart-bar.expense { background: var(--expense); }
+.chart-label { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
 
-.chart-label {
-  position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%);
-  font-size: 0.75rem; color: var(--muted); white-space: nowrap;
-}
-
-/* MEDIA QUERY MOBILE */
+/* =========================================
+   MEDIA QUERY MOBILE (PENJINAKAN TOTAL)
+   ========================================= */
 @media (max-width: 520px) {
   .summary { grid-template-columns: 1fr 1fr; }
   .row { grid-template-columns: 1fr; }
   .header-row h1 { font-size: 1.15rem; }
   .theme-toggle { width: 36px; height: 36px; }
   .budget-form { flex-direction: column; }
-  input, select { font-size: 16px !important; width: 100% !important; max-width: 100% !important; }
-  input[type="date"], input[type="month"] { text-align: center; height: 48px; }
+  
+  /* ATURAN KETAT ANTI MELUBER */
+  input, select {
+    font-size: 16px !important; 
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    display: block;
+  }
+
+  /* Spesifik untuk input tanggal dan bulan di HP */
+  input[type="date"], input[type="month"] {
+    text-align: center; 
+    height: 48px; 
+    padding: 0.6rem !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* Menyembunyikan ikon kalender bawaan yang bikin melebar */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="month"]::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin-left: -10px;
+  }
 }
