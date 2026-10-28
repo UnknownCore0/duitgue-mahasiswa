@@ -447,3 +447,23 @@ function renderBreakdown(data) {
 }
 
 render();
+// ================= LOGIKA NAVIGATION BAR (FASE 1) =================
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    // 1. Hapus class active dari semua tombol nav
+    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    
+    // 2. Tambahkan class active ke tombol yang diklik
+    e.currentTarget.classList.add('active');
+
+    // 3. Sembunyikan semua halaman
+    document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+    
+    // 4. Tampilkan halaman yang dituju
+    const targetId = e.currentTarget.getAttribute('data-target');
+    document.getElementById(targetId).classList.remove('hidden');
+    
+    // 5. Scroll ke atas saat pindah tab
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});

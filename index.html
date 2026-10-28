@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Duit Gue</title>
   
   <!-- PWA CONFIG -->
@@ -15,12 +15,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="./style.css?v=104">
+  <!-- Cache Busting: Naikkan versi ini setiap kali ubah CSS -->
+  <link rel="stylesheet" href="./style.css?v=110">
 </head>
 <body>
   
   <main class="app-container">
     
+    <!-- ================= TAB 1: TRANSAKSI ================= -->
     <section id="page-transaksi" class="page active">
       <header>
         <div class="header-row">
@@ -105,14 +107,64 @@
         <div id="breakdown" class="breakdown"></div>
       </section>
     </section>
-    
-    <!-- Tab lain dibiarkan tersembunyi sementara karena belum ada nav bar -->
-    <section id="page-rekap" class="hidden"></section>
-    <section id="page-hutang" class="hidden"></section>
-    <section id="page-impian" class="hidden"></section>
-    <section id="page-setting" class="hidden"></section>
+
+    <!-- ================= TAB 2: REKAP ================= -->
+    <section id="page-rekap" class="page hidden">
+      <header><h2>📊 Rekap</h2><p>Laporan keuanganmu ada di sini.</p></header>
+      <div class="panel">
+        <p class="empty">Halaman Rekap akan segera hadir (Fase 3).</p>
+      </div>
+    </section>
+
+    <!-- ================= TAB 3: HUTANG ================= -->
+    <section id="page-hutang" class="page hidden">
+      <header><h2>🤝 Hutang</h2><p>Catat pinjaman dengan temanmu.</p></header>
+      <div class="panel">
+        <p class="empty">Halaman Hutang akan segera hadir (Fase 4).</p>
+      </div>
+    </section>
+
+    <!-- ================= TAB 4: IMPIAN ================= -->
+    <section id="page-impian" class="page hidden">
+      <header><h2>🎯 Impian</h2><p>Targetkan barang impianmu.</p></header>
+      <div class="panel">
+        <p class="empty">Halaman Impian akan segera hadir (Fase 4).</p>
+      </div>
+    </section>
+
+    <!-- ================= TAB 5: PROFIL ================= -->
+    <section id="page-profil" class="page hidden">
+      <header><h2>👤 Profil</h2><p>Pengaturan dan pusat kendali aplikasi.</p></header>
+      <div class="panel">
+        <p class="empty">Halaman Profil akan segera hadir (Fase 2).</p>
+      </div>
+    </section>
 
   </main>
+
+  <!-- NAVIGATION BOTTOM BAR (FASE 1) -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-target="page-transaksi">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-text">Transaksi</span>
+    </button>
+    <button class="nav-item" data-target="page-rekap">
+      <span class="nav-icon">📊</span>
+      <span class="nav-text">Rekap</span>
+    </button>
+    <button class="nav-item" data-target="page-hutang">
+      <span class="nav-icon">🤝</span>
+      <span class="nav-text">Hutang</span>
+    </button>
+    <button class="nav-item" data-target="page-impian">
+      <span class="nav-icon">🎯</span>
+      <span class="nav-text">Impian</span>
+    </button>
+    <button class="nav-item" data-target="page-profil">
+      <span class="nav-icon">👤</span>
+      <span class="nav-text">Profil</span>
+    </button>
+  </nav>
 
   <!-- TOAST UNDO -->
   <div id="toast" class="toast" role="status" aria-live="polite">
@@ -120,7 +172,19 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=103"></script>
+  <script src="./app.js?v=110"></script>
 
+  <!-- SERVICE WORKER DIMATIKAN SEMENTARA UNTUK FASE 1 -->
+  <!-- 
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('Service Worker berhasil.', reg.scope))
+          .catch((err) => console.log('Service Worker gagal.', err));
+      });
+    }
+  </script>
+  -->
 </body>
 </html>
