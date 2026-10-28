@@ -80,15 +80,31 @@ header p { color: var(--muted); }
 form { display: grid; gap: .6rem; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
 
-/* INPUT STRICT RULES */
+/* INPUT STRICT RULES (PERBAIKAN TOTAL) */
 input, select {
-  width: 100% !important; max-width: 100% !important; min-width: 0 !important;
-  padding: .7rem .9rem; border: 1px solid var(--border);
-  border-radius: 10px; font-size: .95rem; font-family: inherit;
-  background: var(--card); color: var(--text);
+  width: 100% !important; 
+  max-width: 100% !important; 
+  min-width: 0 !important;
+  padding: .7rem .9rem; 
+  border: 1px solid var(--border);
+  border-radius: 10px; 
+  font-size: .95rem; 
+  font-family: inherit;
+  background: var(--card); 
+  color: var(--text);
   box-sizing: border-box !important;
+  display: block;
 }
 input:focus, select:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+/* Kunci Mati Khusus Input Date & Month di HP */
+input[type="date"], input[type="month"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  text-align: center;
+  height: 48px;
+}
 
 .btn {
   padding: .8rem; background: linear-gradient(135deg, var(--primary), var(--primary-2));
@@ -212,13 +228,39 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
 .menu-arrow { font-size: 1.2rem; color: var(--muted); }
 .divider { height: 1px; background: var(--border); margin: 0.2rem 0; }
 
-/* MEDIA QUERY MOBILE */
+/* =========================================
+   MEDIA QUERY KHUSUS HP (ANTI MELUBER TOTAL)
+   ========================================= */
 @media (max-width: 520px) {
   .summary { grid-template-columns: 1fr 1fr; }
   .row { grid-template-columns: 1fr; }
   .header-row h1 { font-size: 1.15rem; }
   .theme-toggle { width: 36px; height: 36px; }
   .budget-form { flex-direction: column; }
-  input, select { font-size: 16px !important; width: 100% !important; max-width: 100% !important; }
-  input[type="date"], input[type="month"] { text-align: center; height: 48px; }
+
+  /* Paksa semua input agar tidak melebihi lebar layar */
+  input, select {
+    font-size: 16px !important; 
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important; /* Ini kunci utamanya */
+    display: block;
+  }
+
+  /* Spesifik untuk input tanggal dan bulan */
+  input[type="date"], input[type="month"] {
+    text-align: center; 
+    height: 48px; 
+    padding: 0.6rem !important;
+  }
+  
+  /* Menyembunyikan ikon kalender bawaan yang bikin melebar */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="month"]::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin-left: -10px;
+  }
 }
