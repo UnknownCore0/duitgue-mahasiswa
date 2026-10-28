@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Duit Gue</title>
   
-  <!-- PWA CONFIG -->
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#6366f1">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
@@ -15,14 +14,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Naikkan versi ini untuk memaksa update CSS -->
-  <link rel="stylesheet" href="./style.css?v=113">
+  <!-- Wajib naikkan versi ini setiap update -->
+  <link rel="stylesheet" href="./style.css?v=114">
 </head>
 <body>
   
   <main class="app-container">
     
-    <!-- ================= TAB 1: TRANSAKSI ================= -->
+    <!-- TAB 1: TRANSAKSI -->
     <section id="page-transaksi" class="page active">
       <header>
         <div class="header-row">
@@ -37,22 +36,10 @@
       </header>
 
       <section class="summary">
-        <div class="card balance-card">
-          <span>Saldo</span>
-          <strong id="balance">Rp0</strong>
-        </div>
-        <div class="card income">
-          <span>Pemasukan</span>
-          <strong id="income">Rp0</strong>
-        </div>
-        <div class="card expense">
-          <span>Pengeluaran</span>
-          <strong id="expense">Rp0</strong>
-        </div>
-        <div class="card difference">
-          <span>Selisih</span>
-          <strong id="difference">Rp0</strong>
-        </div>
+        <div class="card balance-card"><span>Saldo</span><strong id="balance">Rp0</strong></div>
+        <div class="card income"><span>Pemasukan</span><strong id="income">Rp0</strong></div>
+        <div class="card expense"><span>Pengeluaran</span><strong id="expense">Rp0</strong></div>
+        <div class="card difference"><span>Selisih</span><strong id="difference">Rp0</strong></div>
       </section>
 
       <div id="comparisonBox" class="comparison-box"></div>
@@ -108,34 +95,26 @@
       </section>
     </section>
 
-    <!-- ================= TAB 2: REKAP ================= -->
+    <!-- TAB 2: REKAP -->
     <section id="page-rekap" class="page hidden">
       <header><h2>📊 Rekap</h2><p>Laporan keuanganmu ada di sini.</p></header>
-      <div class="panel">
-        <p class="empty">Halaman Rekap akan segera hadir (Fase 3).</p>
-      </div>
+      <div class="panel"><p class="empty">Halaman Rekap akan segera hadir (Fase 3).</p></div>
     </section>
 
-    <!-- ================= TAB 3: HUTANG ================= -->
+    <!-- TAB 3: HUTANG -->
     <section id="page-hutang" class="page hidden">
       <header><h2>🤝 Hutang</h2><p>Catat pinjaman dengan temanmu.</p></header>
-      <div class="panel">
-        <p class="empty">Halaman Hutang akan segera hadir (Fase 4).</p>
-      </div>
+      <div class="panel"><p class="empty">Halaman Hutang akan segera hadir (Fase 4).</p></div>
     </section>
 
-    <!-- ================= TAB 4: IMPIAN ================= -->
+    <!-- TAB 4: IMPIAN -->
     <section id="page-impian" class="page hidden">
       <header><h2>🎯 Impian</h2><p>Targetkan barang impianmu.</p></header>
-      <div class="panel">
-        <p class="empty">Halaman Impian akan segera hadir (Fase 4).</p>
-      </div>
+      <div class="panel"><p class="empty">Halaman Impian akan segera hadir (Fase 4).</p></div>
     </section>
 
-    <!-- ================= TAB 5: PROFIL ================= -->
+    <!-- TAB 5: PROFIL -->
     <section id="page-profil" class="page hidden">
-      
-      <!-- Header Profil -->
       <div class="profile-header" id="profileHeader">
         <div class="profile-avatar" id="profileAvatar">
           <span id="avatarEmoji">👤</span>
@@ -150,45 +129,30 @@
         </div>
       </div>
 
-      <!-- Input Hidden untuk Upload Foto -->
       <input type="file" id="photoInput" accept="image/*" style="display: none;">
-      <!-- Input Hidden untuk Restore Data -->
       <input type="file" id="restoreInput" accept=".json" style="display: none;">
 
-      <!-- Menu List Profil -->
       <div class="panel menu-list">
         <button class="menu-item" id="btn-dana-statement">
           <div class="menu-icon bg-blue">📊</div>
-          <div class="menu-text">
-            <strong>Dana Statement</strong>
-            <small>Lihat ringkasan & grafik bulanan</small>
-          </div>
+          <div class="menu-text"><strong>Dana Statement</strong><small>Lihat ringkasan & grafik bulanan</small></div>
           <span class="menu-arrow">›</span>
         </button>
         <div class="divider"></div>
         <button class="menu-item" id="btn-backup">
           <div class="menu-icon bg-green">💾</div>
-          <div class="menu-text">
-            <strong>Backup Data</strong>
-            <small>Simpan data ke file .json</small>
-          </div>
+          <div class="menu-text"><strong>Backup Data</strong><small>Simpan data ke file .json</small></div>
           <span class="menu-arrow">›</span>
         </button>
         <button class="menu-item" id="btn-restore">
           <div class="menu-icon bg-orange">📂</div>
-          <div class="menu-text">
-            <strong>Restore Data</strong>
-            <small>Pulihkan data dari file .json</small>
-          </div>
+          <div class="menu-text"><strong>Restore Data</strong><small>Pulihkan data dari file .json</small></div>
           <span class="menu-arrow">›</span>
         </button>
         <div class="divider"></div>
         <button class="menu-item" id="btn-info">
           <div class="menu-icon bg-purple">ℹ️</div>
-          <div class="menu-text">
-            <strong>Info Umum</strong>
-            <small>Tentang aplikasi & versi</small>
-          </div>
+          <div class="menu-text"><strong>Info Umum</strong><small>Tentang aplikasi & versi</small></div>
           <span class="menu-arrow">›</span>
         </button>
       </div>
@@ -196,31 +160,19 @@
 
   </main>
 
-  <!-- NAVIGATION BOTTOM BAR -->
   <nav class="bottom-nav">
-    <button class="nav-item active" data-target="page-transaksi">
-      <span class="nav-icon">🏠</span><span class="nav-text">Transaksi</span>
-    </button>
-    <button class="nav-item" data-target="page-rekap">
-      <span class="nav-icon">📊</span><span class="nav-text">Rekap</span>
-    </button>
-    <button class="nav-item" data-target="page-hutang">
-      <span class="nav-icon">🤝</span><span class="nav-text">Hutang</span>
-    </button>
-    <button class="nav-item" data-target="page-impian">
-      <span class="nav-icon">🎯</span><span class="nav-text">Impian</span>
-    </button>
-    <button class="nav-item" data-target="page-profil">
-      <span class="nav-icon">👤</span><span class="nav-text">Profil</span>
-    </button>
+    <button class="nav-item active" data-target="page-transaksi"><span class="nav-icon">🏠</span><span class="nav-text">Transaksi</span></button>
+    <button class="nav-item" data-target="page-rekap"><span class="nav-icon">📊</span><span class="nav-text">Rekap</span></button>
+    <button class="nav-item" data-target="page-hutang"><span class="nav-icon">🤝</span><span class="nav-text">Hutang</span></button>
+    <button class="nav-item" data-target="page-impian"><span class="nav-icon">🎯</span><span class="nav-text">Impian</span></button>
+    <button class="nav-item" data-target="page-profil"><span class="nav-icon">👤</span><span class="nav-text">Profil</span></button>
   </nav>
 
-  <!-- TOAST UNDO -->
   <div id="toast" class="toast" role="status" aria-live="polite">
     <span id="toastMsg">Transaksi dihapus</span>
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=113"></script>
+  <script src="./app.js?v=114"></script>
 </body>
 </html>
