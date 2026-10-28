@@ -292,3 +292,119 @@ input[type="date"], input[type="month"] {
 .text-content h3 { margin-bottom: 0.5rem; }
 .text-content p { font-size: 0.9rem; line-height: 1.6; color: var(--muted); }
 .text-content h4 { margin-top: 1rem; margin-bottom: 0.3rem; font-size: 1rem; }
+/* ... (kode CSS sebelumnya) ... */
+
+/* ================= CUSTOM SKIN GRADASI ================= */
+[data-color="emerald"] { 
+  --primary: #10b981; --primary-2: #059669; 
+}
+[data-theme="dark"][data-color="emerald"] { 
+  --primary: #34d399; --primary-2: #10b981; 
+}
+
+[data-color="blue"] { 
+  --primary: #3b82f6; --primary-2: #1d4ed8; 
+}
+[data-theme="dark"][data-color="blue"] { 
+  --primary: #60a5fa; --primary-2: #3b82f6; 
+}
+
+[data-color="pink"] { 
+  --primary: #ec4899; --primary-2: #be185d; 
+}
+[data-theme="dark"][data-color="pink"] { 
+  --primary: #f472b6; --primary-2: #ec4899; 
+}
+
+[data-color="orange"] { 
+  --primary: #f97316; --primary-2: #ea580c; 
+}
+[data-theme="dark"][data-color="orange"] { 
+  --primary: #fb923c; --primary-2: #f97316; 
+}
+
+/* Style untuk Lingkaran Pilihan Warna */
+.color-picker { display: flex; gap: 1rem; flex-wrap: wrap; }
+.color-opt {
+  width: 45px; height: 45px; border-radius: 50%;
+  border: 3px solid transparent; cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.color-opt:active { transform: scale(0.9); }
+.color-opt.active { border-color: var(--text); transform: scale(1.1); }
+
+/* ================= DANA STATEMENT CHART ================= */
+.chart-container {
+  height: 200px; display: flex; align-items: flex-end; justify-content: space-around;
+  padding-bottom: 1rem; border-bottom: 2px solid var(--border); margin-top: 1rem;
+}
+.chart-bar-group { display: flex; gap: 8px; align-items: flex-end; height: 100%; }
+.chart-bar {
+  width: 30px; border-radius: 6px 6px 0 0;
+  transition: height 1s ease; position: relative;
+}
+.chart-bar.income { background: var(--income); }
+.chart-bar.expense { background: var(--expense); }
+.chart-label {
+  position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%);
+  font-size: 0.75rem; color: var(--muted); white-space: nowrap;
+}
+/* ... (kode CSS sebelumnya) ... */
+
+/* ================= CUSTOM SKIN GRADASI ================= */
+[data-color="emerald"] { 
+  --primary: #10b981; --primary-2: #059669; 
+}
+[data-theme="dark"][data-color="emerald"] { 
+  --primary: #34d399; --primary-2: #10b981; 
+}
+
+[data-color="blue"] { 
+  --primary: #3b82f6; --primary-2: #1d4ed8; 
+}
+[data-theme="dark"][data-color="blue"] { 
+  --primary: #60a5fa; --primary-2: #3b82f6; 
+}
+
+[data-color="pink"] { 
+  --primary: #ec4899; --primary-2: #be185d; 
+}
+[data-theme="dark"][data-color="pink"] { 
+  --primary: #f472b6; --primary-2: #ec4899; 
+}
+
+[data-color="orange"] { 
+  --primary: #f97316; --primary-2: #ea580c; 
+}
+[data-theme="dark"][data-color="orange"] { 
+  --primary: #fb923c; --primary-2: #f97316; 
+}
+
+/* Style untuk Lingkaran Pilihan Warna */
+.color-picker { display: flex; gap: 1rem; flex-wrap: wrap; }
+.color-opt {
+  width: 45px; height: 45px; border-radius: 50%;
+  border: 3px solid transparent; cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.color-opt:active { transform: scale(0.9); }
+.color-opt.active { border-color: var(--text); transform: scale(1.1); }
+
+/* ================= DANA STATEMENT CHART ================= */
+.chart-container {
+  height: 200px; display: flex; align-items: flex-end; justify-content: space-around;
+  padding-bottom: 1rem; border-bottom: 2px solid var(--border); margin-top: 1rem;
+}
+.chart-bar-group { display: flex; gap: 8px; align-items: flex-end; height: 100%; }
+.chart-bar {
+  width: 30px; border-radius: 6px 6px 0 0;
+  transition: height 1s ease; position: relative;
+}
+.chart-bar.income { background: var(--income); }
+.chart-bar.expense { background: var(--expense); }
+.chart-label {
+  position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%);
+  font-size: 0.75rem; color: var(--muted); white-space: nowrap;
+}

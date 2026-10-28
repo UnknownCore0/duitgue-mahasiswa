@@ -1,6 +1,8 @@
 const STORAGE_KEY = 'transaksi-mahasiswa';
 const BUDGET_KEY = 'budget-mahasiswa';
 const THEME_KEY = 'theme-mahasiswa';
+const COLOR_KEY = 'color-mahasiswa';
+const LANG_KEY = 'lang-mahasiswa';
 const STREAK_KEY = 'streak-mahasiswa';
 const PROFILE_KEY = 'profile-mahasiswa';
 const $ = id => document.getElementById(id);
@@ -21,18 +23,104 @@ let transactions = loadData(STORAGE_KEY, []);
 let budgets = loadData(BUDGET_KEY, {}); 
 let streak = loadData(STREAK_KEY, { count: 0, lastDate: null });
 let profile = loadData(PROFILE_KEY, { name: 'Halo, Mahasiswa!', photo: null });
+let userLang = localStorage.getItem(LANG_KEY) || 'id';
 
 const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
-function escapeHTML(str) {
-  const div = document.createElement('div'); div.textContent = str; return div.innerHTML;
+function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+function formatDate(iso) { return new Date(iso + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function getTodayString() { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+
+// KAMUS BAHASA
+const TRANSLATIONS = {
+  id: {
+    app_desc: 'Catat pemasukan dan pengeluaran harianmu dengan mudah.',
+    balance: 'Saldo', income: 'Pemasukan', expense: 'Pengeluaran', diff: 'Selisih',
+    add_transaction: 'Tambah Transaksi', expense_opt: 'Pengeluaran', income_opt: 'Pemasukan', save_btn: 'Simpan',
+    monthly_budget: '🎯 Budget Bulanan', set_budget: 'Atur Budget', history: 'Riwayat', export: '📥 Export',
+    no_transaction: 'Belum ada transaksi. Yuk catat pengeluaran pertamamu 👇', expense_per_cat: 'Pengeluaran per Kategori',
+    profile_desc: 'Atur aplikasi Duit Gue kamu di sini.', dana_statement: 'Dana Statement', dana_desc: 'Lihat ringkasan & grafik bulanan',
+    theme_skin: 'Tema (Skin)', theme_desc: 'Ubah warna tampilan aplikasi', language: 'Bahasa', language_desc: 'Ganti bahasa aplikasi',
+    backup_data: 'Backup Data', backup_desc: 'Simpan data ke file .json', restore_data: 'Restore Data', restore_desc: 'Pulihkan data dari file .json',
+    info: 'Info Umum', info_desc: 'Tentang aplikasi & versi',
+    nav_home: 'Transaksi', nav_rekap: 'Rekap', nav_hutang: 'Hutang', nav_impian: 'Impian', nav_profil: 'Profil'
+  },
+  en: {
+    app_desc: 'Record your daily income and expenses easily.',
+    balance: 'Balance', income: 'Income', expense: 'Expense', diff: 'Difference',
+    add_transaction: 'Add Transaction', expense_opt: 'Expense', income_opt: 'Income', save_btn: 'Save',
+    monthly_budget: '🎯 Monthly Budget', set_budget: 'Set Budget', history: 'History', export: '📥 Export',
+    no_transaction: 'No transactions yet. Let\'s record your first expense 👇', expense_per_cat: 'Expense per Category',
+    profile_desc: 'Manage your Duit Gue app here.', dana_statement: 'Dana Statement', dana_desc: 'View monthly summary & chart',
+    theme_skin: 'Theme (Skin)', theme_desc: 'Change app color theme', language: 'Language', language_desc: 'Change app language',
+    backup_data: 'Backup Data', backup_desc: 'Save data to .json file', restore_data: 'Restore Data', restore_desc: 'Restore data from .json file',
+    info: 'General Info', info_desc: 'About app & version',
+    nav_home: 'Transaction', nav_rekap: 'Summary', nav_hutang: 'Debt', nav_impian: 'Dream', nav_profil: 'Profile'
+  }
+};
+
+function applyLanguage(lang) {
+  userLang = lang;
+  localStorage.setItem(LANG_KEY, lang);
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    const key = el.getAttribute('data-lang');
+    if (TRANSLATIONS[lang][key]) {
+      if (el.tagName === 'INPUT') el.placeholder = TRANSLATIONS[lang][key];
+      else el.textContent = TRANSLATIONS[lang][key];
+    }
+  });
+  document.querySelectorAll('.btn-lang').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+  });
 }
-function formatDate(iso) {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+// SISTEM TEMA & WARNA GRADASI
+function applyTheme(theme, color) {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.dataset.color = color;
+  $('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem(THEME_KEY, theme);
+  localStorage.setItem(COLOR_KEY, color);
+  
+  document.querySelectorAll('.color-opt').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-color') === color);
+  });
 }
-function getTodayString() {
-  const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10);
+
+const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
+const savedColor = localStorage.getItem(COLOR_KEY) || 'indigo';
+applyTheme(savedTheme, savedColor);
+applyLanguage(userLang);
+
+$('themeToggle').addEventListener('click', () => {
+  const newTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(newTheme, document.documentElement.dataset.color);
+});
+
+// STREAK
+function updateStreak() {
+  const todayStr = getTodayString();
+  if (streak.lastDate === todayStr) return;
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); yesterday.setMinutes(yesterday.getMinutes() - yesterday.getTimezoneOffset());
+  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+  streak.count = (streak.lastDate === yesterdayStr) ? streak.count + 1 : 1;
+  streak.lastDate = todayStr;
+  localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
+  renderStreak();
 }
+function checkStreakValidity() {
+  const todayStr = getTodayString();
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); yesterday.setMinutes(yesterday.getMinutes() - yesterday.getTimezoneOffset());
+  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+  if (streak.lastDate !== todayStr && streak.lastDate !== yesterdayStr) { streak.count = 0; localStorage.setItem(STREAK_KEY, JSON.stringify(streak)); }
+  renderStreak();
+}
+function renderStreak() {
+  const badge = $('streakBadge');
+  if (streak.count > 0) { $('streakCount').textContent = streak.count; badge.classList.remove('hidden'); } 
+  else { badge.classList.add('hidden'); }
+}
+checkStreakValidity();
 
 const CATEGORIES = {
   expense: ['Makan', 'Transport', 'Kuliah', 'Hiburan', 'Kos & Tagihan', 'Lainnya'],
@@ -62,40 +150,6 @@ const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset(
 const today = now.toISOString().slice(0, 10);
 $('date').value = today; $('filterMonth').value = today.slice(0, 7);
 
-function applyTheme(theme) {
-  document.documentElement.dataset.theme = theme;
-  $('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
-  localStorage.setItem(THEME_KEY, theme);
-}
-applyTheme(localStorage.getItem(THEME_KEY) || 'light');
-$('themeToggle').addEventListener('click', () => {
-  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
-});
-
-function updateStreak() {
-  const todayStr = getTodayString();
-  if (streak.lastDate === todayStr) return;
-  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); yesterday.setMinutes(yesterday.getMinutes() - yesterday.getTimezoneOffset());
-  const yesterdayStr = yesterday.toISOString().slice(0, 10);
-  streak.count = (streak.lastDate === yesterdayStr) ? streak.count + 1 : 1;
-  streak.lastDate = todayStr;
-  localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
-  renderStreak();
-}
-function checkStreakValidity() {
-  const todayStr = getTodayString();
-  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); yesterday.setMinutes(yesterday.getMinutes() - yesterday.getTimezoneOffset());
-  const yesterdayStr = yesterday.toISOString().slice(0, 10);
-  if (streak.lastDate !== todayStr && streak.lastDate !== yesterdayStr) { streak.count = 0; localStorage.setItem(STREAK_KEY, JSON.stringify(streak)); }
-  renderStreak();
-}
-function renderStreak() {
-  const badge = $('streakBadge');
-  if (streak.count > 0) { $('streakCount').textContent = streak.count; badge.classList.remove('hidden'); } 
-  else { badge.classList.add('hidden'); }
-}
-checkStreakValidity();
-
 $('form').addEventListener('submit', e => {
   e.preventDefault();
   const amount = Number($('amount').value);
@@ -107,7 +161,7 @@ $('form').addEventListener('submit', e => {
   updateStreak(); render();
   const btn = e.target.querySelector('.btn');
   btn.textContent = '✅ Tersimpan!'; btn.classList.add('saved');
-  setTimeout(() => { btn.textContent = 'Simpan'; btn.classList.remove('saved'); }, 1200);
+  setTimeout(() => { btn.textContent = TRANSLATIONS[userLang].save_btn; btn.classList.remove('saved'); }, 1200);
 });
 
 $('exportBtn').addEventListener('click', () => {
@@ -264,7 +318,7 @@ photoInput.addEventListener('change', (e) => {
   }
 });
 
-// ================= BACKUP & RESTORE =================
+// BACKUP & RESTORE
 document.getElementById('btn-backup').addEventListener('click', () => {
   const dataToBackup = { transactions, budgets, streak, profile };
   const dataStr = JSON.stringify(dataToBackup, null, 2);
@@ -301,33 +355,110 @@ restoreInput.addEventListener('change', (e) => {
   }
 });
 
-// ================= SUB-MENU INFO UMUM =================
+// SUB-MENU NAVIGASI
+document.getElementById('btn-theme').addEventListener('click', () => {
+  document.getElementById('page-profil').classList.add('hidden');
+  document.getElementById('page-theme').classList.remove('hidden');
+});
+document.getElementById('backToProfileFromTheme').addEventListener('click', () => {
+  document.getElementById('page-theme').classList.add('hidden');
+  document.getElementById('page-profil').classList.remove('hidden');
+});
+document.querySelectorAll('.color-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    applyTheme(document.documentElement.dataset.theme, btn.getAttribute('data-color'));
+  });
+});
+
+document.getElementById('btn-language').addEventListener('click', () => {
+  document.getElementById('page-profil').classList.add('hidden');
+  document.getElementById('page-language').classList.remove('hidden');
+});
+document.getElementById('backToProfileFromLang').addEventListener('click', () => {
+  document.getElementById('page-language').classList.add('hidden');
+  document.getElementById('page-profil').classList.remove('hidden');
+});
+document.querySelectorAll('.btn-lang').forEach(btn => {
+  btn.addEventListener('click', () => applyLanguage(btn.getAttribute('data-lang')));
+});
+
+document.getElementById('btn-dana-statement').addEventListener('click', () => {
+  document.getElementById('page-profil').classList.add('hidden');
+  document.getElementById('page-dana-statement').classList.remove('hidden');
+  renderChart();
+});
+document.getElementById('backToProfileFromDana').addEventListener('click', () => {
+  document.getElementById('page-dana-statement').classList.add('hidden');
+  document.getElementById('page-profil').classList.remove('hidden');
+});
+
 document.getElementById('btn-info').addEventListener('click', () => {
   document.getElementById('page-profil').classList.add('hidden');
   document.getElementById('page-info-umum').classList.remove('hidden');
 });
-
 document.getElementById('backToProfile').addEventListener('click', () => {
   document.getElementById('page-info-umum').classList.add('hidden');
   document.getElementById('page-profil').classList.remove('hidden');
 });
-
 document.getElementById('backToInfo').addEventListener('click', () => {
   document.getElementById('page-privacy').classList.add('hidden');
   document.getElementById('page-info-umum').classList.remove('hidden');
 });
-
 document.getElementById('btn-bantuan').addEventListener('click', () => {
-  // GANTI DENGAN NOMOR WA KAMU (Awali dengan 62)
   const waNumber = '6281992053002'; 
   const waMessage = encodeURIComponent('Halo Admin Duit Gue, saya butuh bantuan terkait aplikasi.');
   window.open(`https://wa.me/${waNumber}?text=${waMessage}`, '_blank');
 });
-
 document.getElementById('btn-privacy').addEventListener('click', () => {
   document.getElementById('page-info-umum').classList.add('hidden');
   document.getElementById('page-privacy').classList.remove('hidden');
 });
 
-// Hapus atau timpa event lama untuk btn-info agar tidak memunculkan alert lama
-// (Kode ini dipastikan sudah menghapus logika alert('Duit Gue v1.0...') yang lama)
+// RENDER GRAFIK DANA STATEMENT
+function renderChart() {
+  const chartContainer = document.getElementById('statChart');
+  chartContainer.innerHTML = ''; 
+
+  const todayDate = new Date();
+  const currentYear = todayDate.getFullYear();
+  const currentMonth = todayDate.getMonth();
+
+  const monthsData = [];
+  for (let i = 1; i >= 0; i--) {
+    const d = new Date(currentYear, currentMonth - i, 1);
+    const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleDateString('id-ID', { month: 'short' });
+    
+    const inc = transactions.filter(t => t.type === 'income' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
+    const exp = transactions.filter(t => t.type === 'expense' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
+    
+    monthsData.push({ label, inc, exp });
+  }
+
+  const maxVal = Math.max(...monthsData.flatMap(m => [m.inc, m.exp]), 1000);
+
+  monthsData.forEach(data => {
+    const group = document.createElement('div');
+    group.className = 'chart-bar-group';
+
+    const barInc = document.createElement('div');
+    barInc.className = 'chart-bar income';
+    barInc.style.height = `${(data.inc / maxVal) * 100}%`;
+    if (data.inc > 0) barInc.title = `Pemasukan: ${rupiah(data.inc)}`;
+    
+    const barExp = document.createElement('div');
+    barExp.className = 'chart-bar expense';
+    barExp.style.height = `${(data.exp / maxVal) * 100}%`;
+    if (data.exp > 0) barExp.title = `Pengeluaran: ${rupiah(data.exp)}`;
+
+    const label = document.createElement('div');
+    label.className = 'chart-label';
+    label.textContent = data.label;
+
+    group.appendChild(barInc);
+    group.appendChild(barExp);
+    group.appendChild(label);
+    
+    chartContainer.appendChild(group);
+  });
+}
