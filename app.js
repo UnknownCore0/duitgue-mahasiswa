@@ -359,67 +359,46 @@ restoreInput.addEventListener('change', (e) => {
   }
 });
 
-// SUB-MENU NAVIGASI
-document.getElementById('btn-theme').addEventListener('click', () => {
-  document.getElementById('page-profil').classList.add('hidden');
-  document.getElementById('page-theme').classList.remove('hidden');
-});
-document.getElementById('backToProfileFromTheme').addEventListener('click', () => {
-  document.getElementById('page-theme').classList.add('hidden');
-  document.getElementById('page-profil').classList.remove('hidden');
-});
+// FUNGSI NAVIGASI SUB-MENU
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+  document.getElementById(pageId).classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('btn-theme').addEventListener('click', () => showPage('page-theme'));
+document.getElementById('backToProfileFromTheme').addEventListener('click', () => showPage('page-profil'));
 document.querySelectorAll('.color-opt').forEach(btn => {
-  btn.addEventListener('click', () => {
-    applyTheme(document.documentElement.dataset.theme, btn.getAttribute('data-color'));
-  });
+  btn.addEventListener('click', () => applyTheme(document.documentElement.dataset.theme, btn.getAttribute('data-color')));
 });
 
-document.getElementById('btn-language').addEventListener('click', () => {
-  document.getElementById('page-profil').classList.add('hidden');
-  document.getElementById('page-language').classList.remove('hidden');
-});
-document.getElementById('backToProfileFromLang').addEventListener('click', () => {
-  document.getElementById('page-language').classList.add('hidden');
-  document.getElementById('page-profil').classList.remove('hidden');
-});
+document.getElementById('btn-language').addEventListener('click', () => showPage('page-language'));
+document.getElementById('backToProfileFromLang').addEventListener('click', () => showPage('page-profil'));
 document.querySelectorAll('.btn-lang').forEach(btn => {
   btn.addEventListener('click', () => applyLanguage(btn.getAttribute('data-lang')));
 });
 
+// KHUSUS DANA STATEMENT
 document.getElementById('btn-dana-statement').addEventListener('click', () => {
-  document.getElementById('page-profil').classList.add('hidden');
-  document.getElementById('page-dana-statement').classList.remove('hidden');
-  // Panggil renderChart SETELAH halaman ditampilkan
-  setTimeout(renderChart, 100);
+  showPage('page-dana-statement');
+  // Beri jeda sedikit (100ms) agar DOM sepenuhnya terlihat, baru gambar grafiknya
+  setTimeout(() => {
+    renderChart();
+  }, 100); 
 });
-document.getElementById('backToProfileFromDana').addEventListener('click', () => {
-  document.getElementById('page-dana-statement').classList.add('hidden');
-  document.getElementById('page-profil').classList.remove('hidden');
-});
+document.getElementById('backToProfileFromDana').addEventListener('click', () => showPage('page-profil'));
 
-document.getElementById('btn-info').addEventListener('click', () => {
-  document.getElementById('page-profil').classList.add('hidden');
-  document.getElementById('page-info-umum').classList.remove('hidden');
-});
-document.getElementById('backToProfile').addEventListener('click', () => {
-  document.getElementById('page-info-umum').classList.add('hidden');
-  document.getElementById('page-profil').classList.remove('hidden');
-});
-document.getElementById('backToInfo').addEventListener('click', () => {
-  document.getElementById('page-privacy').classList.add('hidden');
-  document.getElementById('page-info-umum').classList.remove('hidden');
-});
+document.getElementById('btn-info').addEventListener('click', () => showPage('page-info-umum'));
+document.getElementById('backToProfile').addEventListener('click', () => showPage('page-profil'));
+document.getElementById('backToInfo').addEventListener('click', () => showPage('page-info-umum'));
 document.getElementById('btn-bantuan').addEventListener('click', () => {
   const waNumber = '6281992053002'; 
   const waMessage = encodeURIComponent('Halo Admin Duit Gue, saya butuh bantuan terkait aplikasi.');
   window.open(`https://wa.me/${waNumber}?text=${waMessage}`, '_blank');
 });
-document.getElementById('btn-privacy').addEventListener('click', () => {
-  document.getElementById('page-info-umum').classList.add('hidden');
-  document.getElementById('page-privacy').classList.remove('hidden');
-});
+document.getElementById('btn-privacy').addEventListener('click', () => showPage('page-privacy'));
 
-// RENDER GRAFIK DANA STATEMENT
+// FUNGSI RENDER GRAFIK
 function renderChart() {
   const chartContainer = document.getElementById('statChart');
   if (!chartContainer) return;
@@ -430,12 +409,12 @@ function renderChart() {
   const currentMonth = todayDate.getMonth();
 
   const monthsData = [];
-  // Looping 2 bulan terakhir (bulan lalu dan bulan ini)
+  // Looping 2 bulan terakhir
   for (let i = 1; i >= 0; i--) {
     const d = new Date(currentYear, currentMonth - i, 1);
     const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     
-    // Label bulan menggunakan bahasa yang dipilih
+    // Label bahasa
     const label = d.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'short' });
     
     const inc = transactions.filter(t => t.type === 'income' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
@@ -444,7 +423,6 @@ function renderChart() {
     monthsData.push({ label, inc, exp });
   }
 
-  // Cari nilai maksimal untuk skala tinggi bar (minimal 1000 agar bar tidak terlalu tinggi jika data kecil)
   const maxVal = Math.max(...monthsData.flatMap(m => [m.inc, m.exp]), 1000);
 
   monthsData.forEach(data => {
@@ -453,8 +431,7 @@ function renderChart() {
 
     const barInc = document.createElement('div');
     barInc.className = 'chart-bar income';
-    // Berikan tinggi minimal 2% agar batang tetap terlihat meskipun nilainya 0
-    barInc.style.height = `${Math.max((data.inc / maxVal) * 100, 2)}%`;
+    barInc.style.height = `${Math.max((data.inc / maxVal) * 100, 2)}%`; 
     if (data.inc > 0) barInc.title = `Pemasukan: ${rupiah(data.inc)}`;
     
     const barExp = document.createElement('div');
