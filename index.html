@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="./style.css?v=131">
+  <link rel="stylesheet" href="./style.css?v=132">
 </head>
 <body>
   
@@ -81,7 +81,11 @@
           <button id="exportBtn" class="btn-small" aria-label="Export ke CSV" data-lang="export">📥 Export</button>
         </div>
         <div class="row">
-          <input type="month" id="filterMonth" aria-label="Filter bulan">
+          <!-- Trik: Kita sembunyikan teks asli input month dan timpa dengan div -->
+          <div class="month-wrapper">
+            <input type="month" id="filterMonth" aria-label="Filter bulan">
+            <div id="customMonthDisplay" class="custom-month-text">Oktober 2026</div>
+          </div>
           <select id="filterCategory" aria-label="Filter kategori"></select>
         </div>
         <ul id="list" class="list"></ul>
@@ -94,17 +98,19 @@
       </section>
     </section>
 
-    <!-- ================= TAB LAINNYA ================= -->
+    <!-- ================= TAB 2: REKAP ================= -->
     <section id="page-rekap" class="page hidden">
       <header><h2 data-lang="nav_rekap">📊 Rekap</h2><p>Laporan keuanganmu ada di sini.</p></header>
       <div class="panel"><p class="empty">Halaman Rekap akan segera hadir (Fase 3).</p></div>
     </section>
 
+    <!-- ================= TAB 3: HUTANG ================= -->
     <section id="page-hutang" class="page hidden">
       <header><h2 data-lang="nav_hutang">🤝 Hutang</h2><p>Catat pinjaman dengan temanmu.</p></header>
       <div class="panel"><p class="empty">Halaman Hutang akan segera hadir (Fase 4).</p></div>
     </section>
 
+    <!-- ================= TAB 4: IMPIAN ================= -->
     <section id="page-impian" class="page hidden">
       <header><h2 data-lang="nav_impian">🎯 Impian</h2><p>Targetkan barang impianmu.</p></header>
       <div class="panel"><p class="empty">Halaman Impian akan segera hadir (Fase 4).</p></div>
@@ -211,7 +217,7 @@
       
       <div class="panel">
         <h3 style="font-size: 1rem; margin-bottom: 1rem;" data-lang="chart_title">Grafik 2 Bulan Terakhir</h3>
-        <div class="chart-container" id="chartContainer">
+        <div class="chart-container">
           <div class="chart-bars" id="statChart"></div>
         </div>
         <div class="chart-legend" style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; font-size: 0.8rem;">
@@ -281,6 +287,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=131"></script>
+  <script src="./app.js?v=132"></script>
 </body>
 </html>

@@ -31,7 +31,7 @@ const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency
 
 function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
-// Fungsi format tanggal dinamis berdasarkan bahasa
+// Fungsi format tanggal dinamis
 function formatDate(iso) {
   const date = new Date(iso + 'T00:00:00');
   return date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { 
@@ -91,7 +91,7 @@ const TRANSLATIONS = {
   }
 };
 
-// Terjemahkan Kategori untuk penyimpanan (agar konsisten)
+// Terjemahkan Kategori untuk penyimpanan
 const CAT_MAP = {
   'Food': 'Makan', 'College': 'Kuliah', 'Entertainment': 'Hiburan', 'Rent & Bills': 'Kos & Tagihan', 
   'Others': 'Lainnya', 'Allowance': 'Uang Saku', 'Scholarship': 'Beasiswa', 'Salary / Part-time': 'Gaji / Part-time', 'Gift': 'Hadiah'
@@ -101,7 +101,6 @@ function applyLanguage(lang) {
   userLang = lang;
   localStorage.setItem(LANG_KEY, lang);
   
-  // 1. Terjemahkan teks statis
   document.querySelectorAll('[data-lang]').forEach(el => {
     const key = el.getAttribute('data-lang');
     if (TRANSLATIONS[lang][key]) {
@@ -110,18 +109,18 @@ function applyLanguage(lang) {
     }
   });
   
-  // 2. Update tombol bahasa aktif
   document.querySelectorAll('.btn-lang').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
   });
 
-  // 3. Update Dropdown & Placeholder
   fillCategories(); 
   fillFilterCategories();
   fillBudgetCategories();
   updateFormPlaceholders();
+  
+  // Update custom month text
+  updateCustomMonthDisplay();
 
-  // 4. Render Ulang Semua Tampilan yang punya format tanggal/bulan
   render(); 
   renderChart();
 }
@@ -130,6 +129,16 @@ function updateFormPlaceholders() {
   const type = $('type').value;
   $('desc').placeholder = type === 'expense' ? TRANSLATIONS[userLang].desc_placeholder_exp : TRANSLATIONS[userLang].desc_placeholder_inc;
   $('amount').placeholder = TRANSLATIONS[userLang].amount_placeholder;
+}
+
+// Fungsi untuk update teks bulan kustom
+function updateCustomMonthDisplay() {
+  const monthInput = $('filterMonth').value;
+  if (monthInput) {
+    $('customMonthDisplay').textContent = formatMonth(monthInput);
+  } else {
+    $('customMonthDisplay').textContent = userLang === 'en' ? 'All Time' : 'Semua Waktu';
+  }
 }
 
 // SISTEM TEMA & WARNA
@@ -204,6 +213,7 @@ fillCategories(); fillFilterCategories(); fillBudgetCategories();
 const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
 const today = now.toISOString().slice(0, 10);
 $('date').value = today; $('filterMonth').value = today.slice(0, 7);
+updateCustomMonthDisplay(); // Panggil saat pertama kali load
 
 $('form').addEventListener('submit', e => {
   e.preventDefault();
@@ -211,9 +221,8 @@ $('form').addEventListener('submit', e => {
   const desc = $('desc').value.trim();
   if (!desc || !Number.isFinite(amount) || amount <= 0) return;
   
-  // Simpan kategori dalam bahasa Indonesia sebagai standar (agar datanya tidak ganda)
   let rawCat = $('category').value;
-  let standardCat = CAT_MAP[rawCat] || rawCat; // Jika 'Food' jadi 'Makan'
+  let standardCat = CAT_MAP[rawCat] || rawCat;
 
   transactions.push({ id: crypto.randomUUID(), type: $('type').value, date: $('date').value, desc, amount, category: standardCat });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
@@ -273,21 +282,14 @@ $('list').addEventListener('click', e => {
 });
 
 $('filterMonth').addEventListener('change', (e) => {
+  updateCustomMonthDisplay(); // Update teks tampilan saat bulan diganti
   render();
-  // Ubah label bulan yang tampil di tombol filter
-  const monthVal = e.target.value;
-  if (monthVal) {
-    const label = formatMonth(monthVal);
-    // Trik untuk menampilkan nama bulan di input type=month sangat sulit,
-    // jadi kita gunakan title/aria-label sebagai info tambahan.
-  }
 });
 $('filterCategory').addEventListener('change', render);
 
 function getFiltered() {
   const month = $('filterMonth').value; const cat = $('filterCategory').value;
   
-  // Terjemahkan filter pencarian kategori kembali ke standar Indonesia untuk pencocokan data
   let standardCat = cat;
   if (cat !== 'all') {
     for (const [en, id] of Object.entries(CAT_MAP)) {
@@ -307,9 +309,7 @@ function render() {
   $('empty').style.display = data.length ? 'none' : 'block';
   
   $('list').innerHTML = data.map(t => {
-    // Terjemahkan kategori ke bahasa yang dipilih untuk ditampilkan
     const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === t.category) || t.category : t.category;
-    
     return `
     <li class="item" data-id="${t.id}">
       <span class="item-emoji">${emojiFor(displayCat)}</span>
@@ -349,7 +349,6 @@ function renderBudgets() {
     if (pct >= 100) { color = 'var(--expense)'; alertMsg = `<div class="budget-alert" style="color:var(--expense)">⚠️ Budget habis!</div>`; } 
     else if (pct >= 75) { color = 'var(--warning)'; alertMsg = `<div class="budget-alert" style="color:var(--warning)">⚠️ Hampir habis</div>`; }
     
-    // Terjemahkan nama kategori untuk ditampilkan
     const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === cat) || cat : cat;
 
     return `<div class="budget-item"><div class="budget-info"><span class="budget-title">${emojiFor(displayCat)} ${escapeHTML(displayCat)}</span><span class="budget-numbers">${rupiah(used)} / ${rupiah(limit)}</span></div><div class="progress-track"><div class="progress-fill" style="width: ${pct}%; background: ${color};"></div></div>${alertMsg}</div>`;
@@ -505,7 +504,6 @@ function renderChart() {
     const d = new Date(currentYear, currentMonth - i, 1);
     const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     
-    // Label bahasa dinamis
     const label = d.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'short' });
     
     const inc = transactions.filter(t => t.type === 'income' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
