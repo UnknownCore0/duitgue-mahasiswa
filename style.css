@@ -316,35 +316,3 @@ input[type="date"], input[type="month"] {
     margin-left: -10px;
   }
 }
-/* ... (kode CSS sebelumnya) ... */
-
-/* ================= TRIK TAMPILAN TANGGAL & BULAN ================= */
-.date-wrapper, .month-wrapper {
-  position: relative;
-  width: 100%;
-  display: block;
-}
-
-/* Sembunyikan teks asli (transparan) */
-input[type="date"]::-webkit-datetime-edit-text,
-input[type="date"]::-webkit-datetime-edit-month-field,
-input[type="date"]::-webkit-datetime-edit-day-field,
-input[type="date"]::-webkit-datetime-edit-year-field,
-input[type="month"]::-webkit-datetime-edit-text,
-input[type="month"]::-webkit-datetime-edit-month-field,
-input[type="month"]::-webkit-datetime-edit-year-field {
-  color: transparent !important; 
-}
-
-/* Tampilkan teks buatan kita (di atas input) */
-.custom-date-display, .custom-month-display {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none; /* Biarkan klik tembus ke input di bawahnya */
-  font-size: 0.95rem;
-  color: var(--text);
-  z-index: 2;
-}

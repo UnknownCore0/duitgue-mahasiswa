@@ -31,17 +31,12 @@ const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency
 
 function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
-// Format tanggal dan bulan
+// Format tanggal dinamis
 function formatDate(iso) {
   const date = new Date(iso + 'T00:00:00');
-  return date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function formatMonth(monthString) {
-  if (!monthString) return '';
-  const [year, month] = monthString.split('-');
-  const date = new Date(year, month - 1, 1);
-  return date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { 
+    day: 'numeric', month: 'short', year: 'numeric' 
+  });
 }
 
 function getTodayString() { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
@@ -111,9 +106,6 @@ function applyLanguage(lang) {
   fillFilterCategories();
   fillBudgetCategories();
   updateFormPlaceholders();
-  
-  // Update tampilan teks tanggal dan bulan
-  updateCustomDisplayText();
 
   render(); 
   renderChart();
@@ -123,21 +115,6 @@ function updateFormPlaceholders() {
   const type = $('type').value;
   $('desc').placeholder = type === 'expense' ? TRANSLATIONS[userLang].desc_placeholder_exp : TRANSLATIONS[userLang].desc_placeholder_inc;
   $('amount').placeholder = TRANSLATIONS[userLang].amount_placeholder;
-}
-
-// Fungsi untuk mengisi teks tanggal dan bulan
-function updateCustomDisplayText() {
-  // Update Tanggal
-  const dateInput = $('date').value;
-  if (dateInput) $('customDateDisplay').textContent = formatDate(dateInput);
-  
-  // Update Bulan
-  const monthInput = $('filterMonth').value;
-  if (monthInput) {
-    $('customMonthDisplay').textContent = formatMonth(monthInput);
-  } else {
-    $('customMonthDisplay').textContent = userLang === 'en' ? 'All Time' : 'Semua Waktu';
-  }
 }
 
 // SISTEM TEMA & WARNA
@@ -212,14 +189,6 @@ fillCategories(); fillFilterCategories(); fillBudgetCategories();
 const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
 const today = now.toISOString().slice(0, 10);
 $('date').value = today; $('filterMonth').value = today.slice(0, 7);
-updateCustomDisplayText(); // Panggil saat pertama kali load
-
-// EVENT LISTENER UNTUK TANGGAL & BULAN
-$('date').addEventListener('change', updateCustomDisplayText);
-$('filterMonth').addEventListener('change', () => {
-  updateCustomDisplayText();
-  render();
-});
 
 $('form').addEventListener('submit', e => {
   e.preventDefault();
@@ -287,6 +256,7 @@ $('list').addEventListener('click', e => {
   };
 });
 
+$('filterMonth').addEventListener('change', render);
 $('filterCategory').addEventListener('change', render);
 
 function getFiltered() {

@@ -14,8 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Naikkan versi ini untuk memaksa update CSS (v135) -->
-  <link rel="stylesheet" href="./style.css?v=135">
+  <link rel="stylesheet" href="./style.css?v=136">
 </head>
 <body>
   
@@ -52,11 +51,7 @@
               <option value="expense" data-lang="expense_opt">Pengeluaran</option>
               <option value="income" data-lang="income_opt">Pemasukan</option>
             </select>
-            <!-- Bungkus input tanggal untuk trik -->
-            <div class="date-wrapper">
-              <input type="date" id="date" required aria-label="Tanggal">
-              <span class="custom-date-display" id="customDateDisplay"></span>
-            </div>
+            <input type="date" id="date" required aria-label="Tanggal">
           </div>
           <input type="text" id="desc" placeholder="Keterangan (mis. Makan siang)" maxlength="60" required aria-label="Keterangan">
           <div class="row">
@@ -86,11 +81,7 @@
           <button id="exportBtn" class="btn-small" aria-label="Export ke CSV" data-lang="export">📥 Export</button>
         </div>
         <div class="row">
-          <!-- Bungkus input bulan untuk trik -->
-          <div class="month-wrapper">
-            <input type="month" id="filterMonth" aria-label="Filter bulan">
-            <span class="custom-month-display" id="customMonthDisplay"></span>
-          </div>
+          <input type="month" id="filterMonth" aria-label="Filter bulan">
           <select id="filterCategory" aria-label="Filter kategori"></select>
         </div>
         <ul id="list" class="list"></ul>
@@ -292,6 +283,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=135"></script>
+  <script src="./app.js?v=136"></script>
 </body>
 </html>
