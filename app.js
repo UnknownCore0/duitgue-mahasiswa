@@ -10,7 +10,9 @@ const $ = id => document.getElementById(id);
 const EMOJI = {
   'Makan': '🍔', 'Transport': '🚌', 'Kuliah': '📚', 'Hiburan': '🎮',
   'Kos & Tagihan': '🏠', 'Uang Saku': '💰', 'Beasiswa': '🎓',
-  'Gaji / Part-time': '💼', 'Hadiah': '🎁', 'Lainnya': '✨'
+  'Gaji / Part-time': '💼', 'Hadiah': '🎁', 'Lainnya': '✨',
+  'Food': '🍔', 'College': '📚', 'Entertainment': '🎮', 'Rent & Bills': '🏠', 
+  'Others': '✨', 'Allowance': '💰', 'Scholarship': '🎓', 'Salary / Part-time': '💼', 'Gift': '🎁'
 };
 const emojiFor = cat => EMOJI[cat] || '✨';
 
@@ -28,7 +30,25 @@ let userLang = localStorage.getItem(LANG_KEY) || 'id';
 const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
 function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
-function formatDate(iso) { return new Date(iso + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); }
+
+// Fungsi format tanggal dinamis berdasarkan bahasa
+function formatDate(iso) {
+  const date = new Date(iso + 'T00:00:00');
+  return date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { 
+    day: 'numeric', month: 'short', year: 'numeric' 
+  });
+}
+
+// Fungsi format bulan untuk filter
+function formatMonth(monthString) {
+  if (!monthString) return '';
+  const [year, month] = monthString.split('-');
+  const date = new Date(year, month - 1, 1);
+  return date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { 
+    month: 'long', year: 'numeric' 
+  });
+}
+
 function getTodayString() { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
 
 // KAMUS BAHASA
@@ -45,7 +65,11 @@ const TRANSLATIONS = {
     info: 'Info Umum', info_desc: 'Tentang aplikasi & versi',
     nav_home: 'Transaksi', nav_rekap: 'Rekap', nav_hutang: 'Hutang', nav_impian: 'Impian', nav_profil: 'Profil',
     choose_color: 'Pilih Warna Gradasi', chart_title: 'Grafik 2 Bulan Terakhir',
-    help_center: 'Pusat Bantuan', help_desc: 'Hubungi admin via WhatsApp', privacy_notice: 'Privacy Notice', privacy_desc: 'Kebijakan privasi aplikasi'
+    help_center: 'Pusat Bantuan', help_desc: 'Hubungi admin via WhatsApp', privacy_notice: 'Privacy Notice', privacy_desc: 'Kebijakan privasi aplikasi',
+    desc_placeholder_exp: 'Keterangan (mis. Makan siang)', desc_placeholder_inc: 'Keterangan (mis. Uang saku bulanan)', amount_placeholder: 'Jumlah (Rp)',
+    all_cat: 'Semua kategori',
+    cat_expense: ['Makan', 'Transport', 'Kuliah', 'Hiburan', 'Kos & Tagihan', 'Lainnya'],
+    cat_income: ['Uang Saku', 'Beasiswa', 'Gaji / Part-time', 'Hadiah', 'Lainnya']
   },
   en: {
     app_desc: 'Record your daily income and expenses easily.',
@@ -59,13 +83,25 @@ const TRANSLATIONS = {
     info: 'General Info', info_desc: 'About app & version',
     nav_home: 'Transaction', nav_rekap: 'Summary', nav_hutang: 'Debt', nav_impian: 'Dream', nav_profil: 'Profile',
     choose_color: 'Choose Gradient Color', chart_title: 'Last 2 Months Chart',
-    help_center: 'Help Center', help_desc: 'Contact admin via WhatsApp', privacy_notice: 'Privacy Notice', privacy_desc: 'Application privacy policy'
+    help_center: 'Help Center', help_desc: 'Contact admin via WhatsApp', privacy_notice: 'Privacy Notice', privacy_desc: 'Application privacy policy',
+    desc_placeholder_exp: 'Description (e.g. Lunch)', desc_placeholder_inc: 'Description (e.g. Monthly allowance)', amount_placeholder: 'Amount (Rp)',
+    all_cat: 'All categories',
+    cat_expense: ['Food', 'Transport', 'College', 'Entertainment', 'Rent & Bills', 'Others'],
+    cat_income: ['Allowance', 'Scholarship', 'Salary / Part-time', 'Gift', 'Others']
   }
+};
+
+// Terjemahkan Kategori untuk penyimpanan (agar konsisten)
+const CAT_MAP = {
+  'Food': 'Makan', 'College': 'Kuliah', 'Entertainment': 'Hiburan', 'Rent & Bills': 'Kos & Tagihan', 
+  'Others': 'Lainnya', 'Allowance': 'Uang Saku', 'Scholarship': 'Beasiswa', 'Salary / Part-time': 'Gaji / Part-time', 'Gift': 'Hadiah'
 };
 
 function applyLanguage(lang) {
   userLang = lang;
   localStorage.setItem(LANG_KEY, lang);
+  
+  // 1. Terjemahkan teks statis
   document.querySelectorAll('[data-lang]').forEach(el => {
     const key = el.getAttribute('data-lang');
     if (TRANSLATIONS[lang][key]) {
@@ -73,12 +109,30 @@ function applyLanguage(lang) {
       else el.textContent = TRANSLATIONS[lang][key];
     }
   });
+  
+  // 2. Update tombol bahasa aktif
   document.querySelectorAll('.btn-lang').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
   });
+
+  // 3. Update Dropdown & Placeholder
+  fillCategories(); 
+  fillFilterCategories();
+  fillBudgetCategories();
+  updateFormPlaceholders();
+
+  // 4. Render Ulang Semua Tampilan yang punya format tanggal/bulan
+  render(); 
+  renderChart();
 }
 
-// SISTEM TEMA & WARNA GRADASI
+function updateFormPlaceholders() {
+  const type = $('type').value;
+  $('desc').placeholder = type === 'expense' ? TRANSLATIONS[userLang].desc_placeholder_exp : TRANSLATIONS[userLang].desc_placeholder_inc;
+  $('amount').placeholder = TRANSLATIONS[userLang].amount_placeholder;
+}
+
+// SISTEM TEMA & WARNA
 function applyTheme(theme, color) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.color = color;
@@ -126,25 +180,22 @@ function renderStreak() {
 }
 checkStreakValidity();
 
-const CATEGORIES = {
-  expense: ['Makan', 'Transport', 'Kuliah', 'Hiburan', 'Kos & Tagihan', 'Lainnya'],
-  income: ['Uang Saku', 'Beasiswa', 'Gaji / Part-time', 'Hadiah', 'Lainnya']
-};
-const PLACEHOLDERS = {
-  expense: 'Keterangan (mis. Makan siang)', income: 'Keterangan (mis. Uang saku bulanan)'
-};
-
+// DROPDOWN KATEGORI
 function fillCategories() {
   const type = $('type').value;
-  $('category').innerHTML = CATEGORIES[type].map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
-  $('desc').placeholder = PLACEHOLDERS[type];
+  const catList = TRANSLATIONS[userLang][type === 'expense' ? 'cat_expense' : 'cat_income'];
+  $('category').innerHTML = catList.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
+  updateFormPlaceholders();
 }
+
 function fillFilterCategories() {
-  const all = [...new Set([...CATEGORIES.expense, ...CATEGORIES.income])];
-  $('filterCategory').innerHTML = '<option value="all">Semua kategori</option>' + all.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
+  const allCat = [...new Set([...TRANSLATIONS[userLang].cat_expense, ...TRANSLATIONS[userLang].cat_income])];
+  $('filterCategory').innerHTML = `<option value="all">${TRANSLATIONS[userLang].all_cat}</option>` + allCat.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
 }
+
 function fillBudgetCategories() {
-  $('budgetCategory').innerHTML = CATEGORIES.expense.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
+  const catList = TRANSLATIONS[userLang].cat_expense;
+  $('budgetCategory').innerHTML = catList.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
 }
 
 $('type').addEventListener('change', fillCategories);
@@ -159,7 +210,12 @@ $('form').addEventListener('submit', e => {
   const amount = Number($('amount').value);
   const desc = $('desc').value.trim();
   if (!desc || !Number.isFinite(amount) || amount <= 0) return;
-  transactions.push({ id: crypto.randomUUID(), type: $('type').value, date: $('date').value, desc, amount, category: $('category').value });
+  
+  // Simpan kategori dalam bahasa Indonesia sebagai standar (agar datanya tidak ganda)
+  let rawCat = $('category').value;
+  let standardCat = CAT_MAP[rawCat] || rawCat; // Jika 'Food' jadi 'Makan'
+
+  transactions.push({ id: crypto.randomUUID(), type: $('type').value, date: $('date').value, desc, amount, category: standardCat });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
   $('desc').value = ''; $('amount').value = '';
   updateStreak(); render();
@@ -186,7 +242,8 @@ $('budgetForm').addEventListener('submit', e => {
   const cat = $('budgetCategory').value;
   const amt = Number($('budgetAmount').value);
   if (amt > 0) {
-    budgets[cat] = amt;
+    let standardCat = CAT_MAP[cat] || cat;
+    budgets[standardCat] = amt;
     localStorage.setItem(BUDGET_KEY, JSON.stringify(budgets));
     $('budgetAmount').value = ''; $('budgetForm').classList.add('hidden');
     renderBudgets();
@@ -215,12 +272,30 @@ $('list').addEventListener('click', e => {
   };
 });
 
-$('filterMonth').addEventListener('change', render);
+$('filterMonth').addEventListener('change', (e) => {
+  render();
+  // Ubah label bulan yang tampil di tombol filter
+  const monthVal = e.target.value;
+  if (monthVal) {
+    const label = formatMonth(monthVal);
+    // Trik untuk menampilkan nama bulan di input type=month sangat sulit,
+    // jadi kita gunakan title/aria-label sebagai info tambahan.
+  }
+});
 $('filterCategory').addEventListener('change', render);
 
 function getFiltered() {
   const month = $('filterMonth').value; const cat = $('filterCategory').value;
-  return transactions.filter(t => (!month || t.date.startsWith(month)) && (cat === 'all' || t.category === cat)).sort((a, b) => b.date.localeCompare(a.date) || (b.id > a.id ? 1 : -1));
+  
+  // Terjemahkan filter pencarian kategori kembali ke standar Indonesia untuk pencocokan data
+  let standardCat = cat;
+  if (cat !== 'all') {
+    for (const [en, id] of Object.entries(CAT_MAP)) {
+      if (en === cat) standardCat = id;
+    }
+  }
+
+  return transactions.filter(t => (!month || t.date.startsWith(month)) && (standardCat === 'all' || t.category === standardCat)).sort((a, b) => b.date.localeCompare(a.date) || (b.id > a.id ? 1 : -1));
 }
 
 function render() {
@@ -230,13 +305,20 @@ function render() {
   $('income').textContent = rupiah(income); $('expense').textContent = rupiah(expense);
   $('balance').textContent = rupiah(income - expense); $('difference').textContent = rupiah(income - expense);
   $('empty').style.display = data.length ? 'none' : 'block';
-  $('list').innerHTML = data.map(t => `
+  
+  $('list').innerHTML = data.map(t => {
+    // Terjemahkan kategori ke bahasa yang dipilih untuk ditampilkan
+    const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === t.category) || t.category : t.category;
+    
+    return `
     <li class="item" data-id="${t.id}">
-      <span class="item-emoji">${emojiFor(t.category)}</span>
-      <div class="item-info"><strong>${escapeHTML(t.desc)}</strong><small>${escapeHTML(t.category)} · ${formatDate(t.date)}</small></div>
+      <span class="item-emoji">${emojiFor(displayCat)}</span>
+      <div class="item-info"><strong>${escapeHTML(t.desc)}</strong><small>${escapeHTML(displayCat)} · ${formatDate(t.date)}</small></div>
       <span class="amount ${t.type}">${t.type === 'income' ? '+' : '-'}${rupiah(t.amount)}</span>
       <button class="delete" data-id="${t.id}">🗑</button>
-    </li>`).join('');
+    </li>`;
+  }).join('');
+  
   renderComparison(); renderBudgets(); renderBreakdown(data);
 }
 
@@ -260,12 +342,17 @@ function renderBudgets() {
   const monthExpenses = transactions.filter(t => t.type === 'expense' && (!month || t.date.startsWith(month))).reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + t.amount; return acc; }, {});
   const budgetEntries = Object.entries(budgets);
   if (budgetEntries.length === 0) { $('budgetList').innerHTML = '<p class="empty" style="padding: .5rem 0; font-size:.85rem;">Belum ada budget.</p>'; return; }
+  
   $('budgetList').innerHTML = budgetEntries.map(([cat, limit]) => {
     const used = monthExpenses[cat] || 0; const pct = Math.min((used / limit) * 100, 100);
     let color = 'var(--success)', alertMsg = '';
     if (pct >= 100) { color = 'var(--expense)'; alertMsg = `<div class="budget-alert" style="color:var(--expense)">⚠️ Budget habis!</div>`; } 
     else if (pct >= 75) { color = 'var(--warning)'; alertMsg = `<div class="budget-alert" style="color:var(--warning)">⚠️ Hampir habis</div>`; }
-    return `<div class="budget-item"><div class="budget-info"><span class="budget-title">${emojiFor(cat)} ${escapeHTML(cat)}</span><span class="budget-numbers">${rupiah(used)} / ${rupiah(limit)}</span></div><div class="progress-track"><div class="progress-fill" style="width: ${pct}%; background: ${color};"></div></div>${alertMsg}</div>`;
+    
+    // Terjemahkan nama kategori untuk ditampilkan
+    const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === cat) || cat : cat;
+
+    return `<div class="budget-item"><div class="budget-info"><span class="budget-title">${emojiFor(displayCat)} ${escapeHTML(displayCat)}</span><span class="budget-numbers">${rupiah(used)} / ${rupiah(limit)}</span></div><div class="progress-track"><div class="progress-fill" style="width: ${pct}%; background: ${color};"></div></div>${alertMsg}</div>`;
   }).join('');
 }
 
@@ -275,7 +362,13 @@ function renderBreakdown(data) {
   const perCategory = {}; expenses.forEach(t => { perCategory[t.category] = (perCategory[t.category] || 0) + t.amount; });
   const entries = Object.entries(perCategory).sort((a, b) => b[1] - a[1]); const colors = ['#6366f1', '#a855f7', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4'];
   let acc = 0; const segments = entries.map(([, sum], i) => { const start = acc; acc += (sum / total) * 100; return `${colors[i % colors.length]} ${start}% ${acc}%`; }).join(', ');
-  const legend = entries.map(([cat, sum], i) => { const pct = Math.round((sum / total) * 100); return `<li class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span><span class="legend-name">${emojiFor(cat)} ${escapeHTML(cat)}</span><span class="legend-val">${rupiah(sum)} (${pct}%)</span></li>`; }).join('');
+  
+  const legend = entries.map(([cat, sum], i) => { 
+    const pct = Math.round((sum / total) * 100); 
+    const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === cat) || cat : cat;
+    return `<li class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span><span class="legend-name">${emojiFor(displayCat)} ${escapeHTML(displayCat)}</span><span class="legend-val">${rupiah(sum)} (${pct}%)</span></li>`; 
+  }).join('');
+  
   $('breakdown').innerHTML = `<div class="donut-wrap"><div class="donut" style="background: conic-gradient(${segments})"><div class="donut-hole"><span>Total</span><strong>${rupiah(total)}</strong></div></div><ul class="legend">${legend}</ul></div>`;
 }
 
@@ -381,7 +474,6 @@ document.querySelectorAll('.btn-lang').forEach(btn => {
 // KHUSUS DANA STATEMENT
 document.getElementById('btn-dana-statement').addEventListener('click', () => {
   showPage('page-dana-statement');
-  // Beri jeda sedikit (50ms) agar DOM sepenuhnya terlihat, baru gambar grafiknya
   setTimeout(() => {
     renderChart();
   }, 50); 
@@ -398,7 +490,7 @@ document.getElementById('btn-bantuan').addEventListener('click', () => {
 });
 document.getElementById('btn-privacy').addEventListener('click', () => showPage('page-privacy'));
 
-// FUNGSI RENDER GRAFIK (SUDAH DIPERBAIKI)
+// FUNGSI RENDER GRAFIK
 function renderChart() {
   const chartContainer = document.getElementById('statChart');
   if (!chartContainer) return;
@@ -409,11 +501,11 @@ function renderChart() {
   const currentMonth = todayDate.getMonth();
 
   const monthsData = [];
-  // Looping 2 bulan terakhir
   for (let i = 1; i >= 0; i--) {
     const d = new Date(currentYear, currentMonth - i, 1);
     const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     
+    // Label bahasa dinamis
     const label = d.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'short' });
     
     const inc = transactions.filter(t => t.type === 'income' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
