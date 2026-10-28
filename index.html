@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Naikkan versi ini untuk memaksa update CSS -->
-  <link rel="stylesheet" href="./style.css?v=111">
+  <link rel="stylesheet" href="./style.css?v=113">
 </head>
 <body>
   
@@ -136,18 +136,27 @@
     <section id="page-profil" class="page hidden">
       
       <!-- Header Profil -->
-      <div class="profile-header">
-        <div class="profile-avatar">👤</div>
+      <div class="profile-header" id="profileHeader">
+        <div class="profile-avatar" id="profileAvatar">
+          <span id="avatarEmoji">👤</span>
+          <img id="avatarImage" src="" alt="Foto Profil" style="display: none;">
+        </div>
         <div class="profile-info">
-          <h2>Halo, Mahasiswa!</h2>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <h2 id="profileName">Halo, Mahasiswa!</h2>
+            <button id="editProfileBtn" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">✏️</button>
+          </div>
           <p>Atur aplikasi Duit Gue kamu di sini.</p>
         </div>
       </div>
 
+      <!-- Input Hidden untuk Upload Foto -->
+      <input type="file" id="photoInput" accept="image/*" style="display: none;">
+      <!-- Input Hidden untuk Restore Data -->
+      <input type="file" id="restoreInput" accept=".json" style="display: none;">
+
       <!-- Menu List Profil -->
       <div class="panel menu-list">
-        
-        <!-- Dana Statement -->
         <button class="menu-item" id="btn-dana-statement">
           <div class="menu-icon bg-blue">📊</div>
           <div class="menu-text">
@@ -156,10 +165,7 @@
           </div>
           <span class="menu-arrow">›</span>
         </button>
-
         <div class="divider"></div>
-
-        <!-- Backup Data -->
         <button class="menu-item" id="btn-backup">
           <div class="menu-icon bg-green">💾</div>
           <div class="menu-text">
@@ -168,8 +174,6 @@
           </div>
           <span class="menu-arrow">›</span>
         </button>
-
-        <!-- Restore Data -->
         <button class="menu-item" id="btn-restore">
           <div class="menu-icon bg-orange">📂</div>
           <div class="menu-text">
@@ -178,10 +182,7 @@
           </div>
           <span class="menu-arrow">›</span>
         </button>
-
         <div class="divider"></div>
-
-        <!-- Info Umum -->
         <button class="menu-item" id="btn-info">
           <div class="menu-icon bg-purple">ℹ️</div>
           <div class="menu-text">
@@ -191,7 +192,6 @@
           <span class="menu-arrow">›</span>
         </button>
       </div>
-      
     </section>
 
   </main>
@@ -199,24 +199,19 @@
   <!-- NAVIGATION BOTTOM BAR -->
   <nav class="bottom-nav">
     <button class="nav-item active" data-target="page-transaksi">
-      <span class="nav-icon">🏠</span>
-      <span class="nav-text">Transaksi</span>
+      <span class="nav-icon">🏠</span><span class="nav-text">Transaksi</span>
     </button>
     <button class="nav-item" data-target="page-rekap">
-      <span class="nav-icon">📊</span>
-      <span class="nav-text">Rekap</span>
+      <span class="nav-icon">📊</span><span class="nav-text">Rekap</span>
     </button>
     <button class="nav-item" data-target="page-hutang">
-      <span class="nav-icon">🤝</span>
-      <span class="nav-text">Hutang</span>
+      <span class="nav-icon">🤝</span><span class="nav-text">Hutang</span>
     </button>
     <button class="nav-item" data-target="page-impian">
-      <span class="nav-icon">🎯</span>
-      <span class="nav-text">Impian</span>
+      <span class="nav-icon">🎯</span><span class="nav-text">Impian</span>
     </button>
     <button class="nav-item" data-target="page-profil">
-      <span class="nav-icon">👤</span>
-      <span class="nav-text">Profil</span>
+      <span class="nav-icon">👤</span><span class="nav-text">Profil</span>
     </button>
   </nav>
 
@@ -226,7 +221,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=111"></script>
-
+  <script src="./app.js?v=113"></script>
 </body>
 </html>

@@ -80,7 +80,7 @@ header p { color: var(--muted); }
 form { display: grid; gap: .6rem; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
 
-/* INPUT STRICT RULES (ANTI MELUBER) */
+/* INPUT STRICT RULES */
 input, select {
   width: 100% !important; max-width: 100% !important; min-width: 0 !important;
   padding: .7rem .9rem; border: 1px solid var(--border);
@@ -179,17 +179,21 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
   display: flex; align-items: center; gap: 1rem;
   background: var(--card); padding: 1.25rem; border-radius: 16px;
   box-shadow: var(--shadow); margin-bottom: 1rem;
+  cursor: pointer; transition: background 0.2s;
 }
+.profile-header:hover { background: var(--bg); }
 .profile-avatar {
   width: 60px; height: 60px; border-radius: 50%;
   background: var(--bg); display: grid; place-items: center;
   font-size: 2rem; border: 2px solid var(--primary);
+  position: relative; overflow: hidden;
 }
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .profile-info h2 { font-size: 1.2rem; margin-bottom: .2rem; }
 .profile-info p { font-size: .85rem; color: var(--muted); }
 
 /* Menu List Profil */
-.menu-list { padding: .5rem 1rem; } /* Panel khusus untuk list menu */
+.menu-list { padding: .5rem 1rem; }
 .menu-item {
   display: flex; align-items: center; gap: 1rem;
   width: 100%; padding: 1rem 0; background: none; border: none;
@@ -197,36 +201,24 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
   transition: background 0.2s;
 }
 .menu-item:active { background: var(--bg); }
-.menu-icon {
-  width: 40px; height: 40px; border-radius: 10px;
-  display: grid; place-items: center; font-size: 1.2rem;
-  flex-shrink: 0;
-}
+.menu-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 1.2rem; flex-shrink: 0; }
 .bg-blue { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
 .bg-green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 .bg-orange { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 .bg-purple { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
-
 .menu-text { flex: 1; }
 .menu-text strong { display: block; font-size: .95rem; font-weight: 600; margin-bottom: 0.1rem; }
 .menu-text small { font-size: .75rem; color: var(--muted); }
 .menu-arrow { font-size: 1.2rem; color: var(--muted); }
-
 .divider { height: 1px; background: var(--border); margin: 0.2rem 0; }
 
-/* MEDIA QUERY MOBILE (STRICT) */
+/* MEDIA QUERY MOBILE */
 @media (max-width: 520px) {
   .summary { grid-template-columns: 1fr 1fr; }
   .row { grid-template-columns: 1fr; }
   .header-row h1 { font-size: 1.15rem; }
   .theme-toggle { width: 36px; height: 36px; }
   .budget-form { flex-direction: column; }
-  
-  /* Kunci mati agar tidak meluber */
-  input, select {
-    font-size: 16px !important; 
-    width: 100% !important;
-    max-width: 100% !important;
-  }
+  input, select { font-size: 16px !important; width: 100% !important; max-width: 100% !important; }
   input[type="date"], input[type="month"] { text-align: center; height: 48px; }
 }
