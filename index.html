@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Naikkan versi ini untuk memaksa update CSS (v146) -->
-  <link rel="stylesheet" href="./style.css?v=146">
+  <link rel="stylesheet" href="./style.css?v=147">
 </head>
 <body>
   
@@ -82,7 +82,10 @@
           <button id="exportBtn" class="btn-small" aria-label="Export ke CSV" data-lang="export">📥 Export</button>
         </div>
         <div class="row">
-          <input type="month" id="filterMonth" aria-label="Filter bulan">
+          <div class="month-wrapper">
+            <input type="month" id="filterMonth" aria-label="Filter bulan">
+            <span class="custom-month-text" id="customMonthDisplay"></span>
+          </div>
           <select id="filterCategory" aria-label="Filter kategori"></select>
         </div>
         <ul id="list" class="list"></ul>
@@ -356,6 +359,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=146"></script>
+  <script src="./app.js?v=147"></script>
 </body>
 </html>
