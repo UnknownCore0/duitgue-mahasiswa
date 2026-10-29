@@ -109,6 +109,7 @@ function applyLanguage(lang) {
 
   render(); 
   renderChart();
+  renderRekap(); // Render ulang rekap saat bahasa diganti
 }
 
 function updateFormPlaceholders() {
@@ -344,6 +345,86 @@ function renderBreakdown(data) {
 }
 
 render();
+
+// ================= LOGIKA REKAP (FASE 3) =================
+function initRekapYears() {
+  const yearSelect = $('rekapYear');
+  const currentYear = new Date().getFullYear();
+  let years = [...new Set(transactions.map(t => t.date.split('-')[0]))]; // Ambil tahun dari data transaksi
+  if (years.length === 0) years.push(currentYear.toString()); // Jika belum ada data, tampilkan tahun ini
+  
+  years.sort((a, b) => b - a); // Urutkan dari terbaru
+  
+  yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+}
+
+function renderRekap() {
+  const selectedYear = $('rekapYear').value;
+  if (!selectedYear) return;
+
+  // Filter transaksi berdasarkan tahun yang dipilih
+  const yearTransactions = transactions.filter(t => t.date.startsWith(selectedYear));
+
+  // Hitung Total Tahunan
+  const totalIncome = yearTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExpense = yearTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  
+  $('rekapTotalIncome').textContent = rupiah(totalIncome);
+  $('rekapTotalExpense').textContent = rupiah(totalExpense);
+  $('rekapTotalBalance').textContent = rupiah(totalIncome - totalExpense);
+
+  // Buat Daftar Per Bulan
+  const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+  let rekapHTML = '';
+
+  months.forEach(m => {
+    const monthStr = `${selectedYear}-${m}`;
+    const monthTrans = yearTransactions.filter(t => t.date.startsWith(monthStr));
+    
+    // Nama bulan dinamis sesuai bahasa
+    const monthDate = new Date(selectedYear, parseInt(m) - 1, 1);
+    const monthName = monthDate.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'long' });
+
+    if (monthTrans.length > 0) {
+      const inc = monthTrans.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const exp = monthTrans.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      const diff = inc - exp;
+
+      rekapHTML += `
+        <div class="rekap-month-card">
+          <div class="rekap-month-header">
+            <span>${monthName}</span>
+          </div>
+          <div class="rekap-month-body">
+            <div class="rekap-row income"><span data-lang="income">Pemasukan</span><span>+${rupiah(inc)}</span></div>
+            <div class="rekap-row expense"><span data-lang="expense">Pengeluaran</span><span>-${rupiah(exp)}</span></div>
+            <div class="rekap-row total"><span data-lang="diff">Selisih</span><span>${rupiah(diff)}</span></div>
+          </div>
+        </div>
+      `;
+    }
+  });
+
+  if (!rekapHTML) {
+    rekapHTML = `<p class="empty">Belum ada data transaksi di tahun ${selectedYear}.</p>`;
+  }
+
+  $('rekapList').innerHTML = rekapHTML;
+}
+
+// Event Listener Tahun Rekap
+$('rekapYear').addEventListener('change', renderRekap);
+
+// Inisialisasi awal Rekap
+initRekapYears();
+renderRekap();
+
+// Update initRekapYears saat ada transaksi baru
+const originalUpdateStreak = updateStreak;
+updateStreak = function() {
+  originalUpdateStreak();
+  initRekapYears(); // Update opsi tahun jika ada tahun baru
+};
 
 // ================= NAVIGASI & PROFIL =================
 document.querySelectorAll('.nav-item').forEach(btn => {

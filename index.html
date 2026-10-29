@@ -14,7 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="./style.css?v=136">
+  <!-- Naikkan versi ini untuk memaksa update CSS (v137) -->
+  <link rel="stylesheet" href="./style.css?v=137">
 </head>
 <body>
   
@@ -94,10 +95,45 @@
       </section>
     </section>
 
-    <!-- ================= TAB 2: REKAP ================= -->
+    <!-- ================= TAB 2: REKAP (FASE 3) ================= -->
     <section id="page-rekap" class="page hidden">
-      <header><h2 data-lang="nav_rekap">📊 Rekap</h2><p>Laporan keuanganmu ada di sini.</p></header>
-      <div class="panel"><p class="empty">Halaman Rekap akan segera hadir (Fase 3).</p></div>
+      <header>
+        <h2 data-lang="nav_rekap">📊 Rekap Keuangan</h2>
+        <p>Lihat ringkasan dan evaluasi keuanganmu.</p>
+      </header>
+
+      <!-- Filter Tahun -->
+      <div class="panel" style="padding: 1rem; margin-bottom: 1rem;">
+        <div class="row" style="grid-template-columns: 1fr;">
+          <select id="rekapYear" style="text-align: center; font-weight: 600;">
+            <!-- Diisi oleh JS -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Ringkasan Tahunan -->
+      <section class="summary" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="card balance-card" style="background: linear-gradient(135deg, var(--primary), var(--primary-2));">
+          <span>Total Saldo</span>
+          <strong id="rekapTotalBalance">Rp0</strong>
+        </div>
+        <div class="card income">
+          <span data-lang="income">Pemasukan</span>
+          <strong id="rekapTotalIncome">Rp0</strong>
+        </div>
+        <div class="card expense">
+          <span data-lang="expense">Pengeluaran</span>
+          <strong id="rekapTotalExpense">Rp0</strong>
+        </div>
+      </section>
+
+      <!-- Tabel Rekap Bulanan -->
+      <div class="panel">
+        <h3 style="font-size: 1rem; margin-bottom: 1rem;">Aktivitas Per Bulan</h3>
+        <div id="rekapList" class="rekap-list">
+          <!-- Diisi oleh JS -->
+        </div>
+      </div>
     </section>
 
     <!-- ================= TAB 3: HUTANG ================= -->
@@ -176,7 +212,6 @@
         <button class="back-btn" id="backToProfileFromTheme">‹</button>
         <h2 data-lang="theme_skin">🎨 Tema (Skin)</h2>
       </header>
-      
       <div class="panel">
         <h3 style="font-size: 1rem; margin-bottom: 1rem;" data-lang="choose_color">Pilih Warna Gradasi</h3>
         <div class="color-picker">
@@ -195,7 +230,6 @@
         <button class="back-btn" id="backToProfileFromLang">‹</button>
         <h2 data-lang="language">🌐 Bahasa</h2>
       </header>
-      
       <div class="panel">
         <div class="row" style="flex-direction: column; gap: 1rem;">
           <button class="btn-small btn-lang" data-lang="id" style="padding: 1rem;">🇮🇩 Indonesia</button>
@@ -210,7 +244,6 @@
         <button class="back-btn" id="backToProfileFromDana">‹</button>
         <h2 data-lang="dana_statement">📊 Dana Statement</h2>
       </header>
-      
       <div class="panel">
         <h3 style="font-size: 1rem; margin-bottom: 1rem;" data-lang="chart_title">Grafik 2 Bulan Terakhir</h3>
         <div class="chart-container">
@@ -283,6 +316,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=136"></script>
+  <script src="./app.js?v=137"></script>
 </body>
 </html>
