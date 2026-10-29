@@ -59,7 +59,9 @@ const TRANSLATIONS = {
     desc_placeholder_exp: 'Keterangan (mis. Makan siang)', desc_placeholder_inc: 'Keterangan (mis. Uang saku bulanan)', amount_placeholder: 'Jumlah (Rp)',
     all_cat: 'Semua kategori',
     cat_expense: ['Makan', 'Transport', 'Kuliah', 'Hiburan', 'Kos & Tagihan', 'Lainnya'],
-    cat_income: ['Uang Saku', 'Beasiswa', 'Gaji / Part-time', 'Hadiah', 'Lainnya']
+    cat_income: ['Uang Saku', 'Beasiswa', 'Gaji / Part-time', 'Hadiah', 'Lainnya'],
+    rekap_title: '📊 Rekap Keuangan', rekap_desc: 'Lihat ringkasan dan evaluasi keuanganmu.',
+    total_balance: 'Total Saldo', monthly_activity: 'Aktivitas Per Bulan', no_rekap_data: 'Belum ada data transaksi di tahun ini.'
   },
   en: {
     app_desc: 'Record your daily income and expenses easily.',
@@ -77,7 +79,9 @@ const TRANSLATIONS = {
     desc_placeholder_exp: 'Description (e.g. Lunch)', desc_placeholder_inc: 'Description (e.g. Monthly allowance)', amount_placeholder: 'Amount (Rp)',
     all_cat: 'All categories',
     cat_expense: ['Food', 'Transport', 'College', 'Entertainment', 'Rent & Bills', 'Others'],
-    cat_income: ['Allowance', 'Scholarship', 'Salary / Part-time', 'Gift', 'Others']
+    cat_income: ['Allowance', 'Scholarship', 'Salary / Part-time', 'Gift', 'Others'],
+    rekap_title: '📊 Financial Summary', rekap_desc: 'View your financial summary and evaluation.',
+    total_balance: 'Total Balance', monthly_activity: 'Monthly Activity', no_rekap_data: 'No transaction data for this year.'
   }
 };
 
@@ -106,10 +110,26 @@ function applyLanguage(lang) {
   fillFilterCategories();
   fillBudgetCategories();
   updateFormPlaceholders();
+  updateRekapTitles(); // Update judul rekap
 
   render(); 
   renderChart();
-  renderRekap(); // Render ulang rekap saat bahasa diganti
+  renderRekap(); // Render ulang isi rekap
+}
+
+function updateRekapTitles() {
+  // Update judul halaman Rekap
+  const rekapHeader = document.querySelector('#page-rekap header h2');
+  if (rekapHeader) rekapHeader.textContent = TRANSLATIONS[userLang].rekap_title;
+  
+  const rekapDesc = document.querySelector('#page-rekap header p');
+  if (rekapDesc) rekapDesc.textContent = TRANSLATIONS[userLang].rekap_desc;
+
+  const totalBalanceLabel = document.querySelector('#rekapTotalBalance').previousElementSibling;
+  if (totalBalanceLabel) totalBalanceLabel.textContent = TRANSLATIONS[userLang].total_balance;
+
+  const monthlyActivityTitle = document.querySelector('#rekapList').previousElementSibling;
+  if (monthlyActivityTitle) monthlyActivityTitle.textContent = TRANSLATIONS[userLang].monthly_activity;
 }
 
 function updateFormPlaceholders() {
@@ -203,7 +223,7 @@ $('form').addEventListener('submit', e => {
   transactions.push({ id: crypto.randomUUID(), type: $('type').value, date: $('date').value, desc, amount, category: standardCat });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
   $('desc').value = ''; $('amount').value = '';
-  updateStreak(); render();
+  updateStreak(); render(); renderRekap();
   const btn = e.target.querySelector('.btn');
   btn.textContent = '✅ Tersimpan!'; btn.classList.add('saved');
   setTimeout(() => { btn.textContent = TRANSLATIONS[userLang].save_btn; btn.classList.remove('saved'); }, 1200);
@@ -245,7 +265,7 @@ $('list').addEventListener('click', e => {
   const removed = transactions[index];
   transactions.splice(index, 1);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-  render();
+  render(); renderRekap();
   const toast = $('toast'); $('toastMsg').textContent = `"${removed.desc}" dihapus`; toast.classList.add('show');
   if (pendingDelete) clearTimeout(pendingDelete);
   pendingDelete = setTimeout(() => toast.classList.remove('show'), TOAST_DURATION);
@@ -253,7 +273,7 @@ $('list').addEventListener('click', e => {
     clearTimeout(pendingDelete); toast.classList.remove('show');
     transactions.splice(index, 0, removed);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-    render();
+    render(); renderRekap();
   };
 });
 
@@ -350,10 +370,10 @@ render();
 function initRekapYears() {
   const yearSelect = $('rekapYear');
   const currentYear = new Date().getFullYear();
-  let years = [...new Set(transactions.map(t => t.date.split('-')[0]))]; // Ambil tahun dari data transaksi
-  if (years.length === 0) years.push(currentYear.toString()); // Jika belum ada data, tampilkan tahun ini
+  let years = [...new Set(transactions.map(t => t.date.split('-')[0]))]; 
+  if (years.length === 0) years.push(currentYear.toString()); 
   
-  years.sort((a, b) => b - a); // Urutkan dari terbaru
+  years.sort((a, b) => b - a); 
   
   yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
 }
@@ -362,10 +382,8 @@ function renderRekap() {
   const selectedYear = $('rekapYear').value;
   if (!selectedYear) return;
 
-  // Filter transaksi berdasarkan tahun yang dipilih
   const yearTransactions = transactions.filter(t => t.date.startsWith(selectedYear));
 
-  // Hitung Total Tahunan
   const totalIncome = yearTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const totalExpense = yearTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   
@@ -373,7 +391,6 @@ function renderRekap() {
   $('rekapTotalExpense').textContent = rupiah(totalExpense);
   $('rekapTotalBalance').textContent = rupiah(totalIncome - totalExpense);
 
-  // Buat Daftar Per Bulan
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
   let rekapHTML = '';
 
@@ -381,7 +398,6 @@ function renderRekap() {
     const monthStr = `${selectedYear}-${m}`;
     const monthTrans = yearTransactions.filter(t => t.date.startsWith(monthStr));
     
-    // Nama bulan dinamis sesuai bahasa
     const monthDate = new Date(selectedYear, parseInt(m) - 1, 1);
     const monthName = monthDate.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'long' });
 
@@ -396,9 +412,9 @@ function renderRekap() {
             <span>${monthName}</span>
           </div>
           <div class="rekap-month-body">
-            <div class="rekap-row income"><span data-lang="income">Pemasukan</span><span>+${rupiah(inc)}</span></div>
-            <div class="rekap-row expense"><span data-lang="expense">Pengeluaran</span><span>-${rupiah(exp)}</span></div>
-            <div class="rekap-row total"><span data-lang="diff">Selisih</span><span>${rupiah(diff)}</span></div>
+            <div class="rekap-row income"><span>${TRANSLATIONS[userLang].income}</span><span>+${rupiah(inc)}</span></div>
+            <div class="rekap-row expense"><span>${TRANSLATIONS[userLang].expense}</span><span>-${rupiah(exp)}</span></div>
+            <div class="rekap-row total"><span>${TRANSLATIONS[userLang].diff}</span><span>${rupiah(diff)}</span></div>
           </div>
         </div>
       `;
@@ -406,16 +422,14 @@ function renderRekap() {
   });
 
   if (!rekapHTML) {
-    rekapHTML = `<p class="empty">Belum ada data transaksi di tahun ${selectedYear}.</p>`;
+    rekapHTML = `<p class="empty">${TRANSLATIONS[userLang].no_rekap_data}</p>`;
   }
 
   $('rekapList').innerHTML = rekapHTML;
 }
 
-// Event Listener Tahun Rekap
 $('rekapYear').addEventListener('change', renderRekap);
 
-// Inisialisasi awal Rekap
 initRekapYears();
 renderRekap();
 
@@ -423,7 +437,7 @@ renderRekap();
 const originalUpdateStreak = updateStreak;
 updateStreak = function() {
   originalUpdateStreak();
-  initRekapYears(); // Update opsi tahun jika ada tahun baru
+  initRekapYears(); 
 };
 
 // ================= NAVIGASI & PROFIL =================
