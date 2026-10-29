@@ -127,7 +127,6 @@ function applyLanguage(lang) {
   });
 
   fillCategories(); fillFilterCategories(); fillBudgetCategories(); updateFormPlaceholders();
-  updateCustomMonthDisplay();
   updateRekapTitles();
   render(); renderChart(); renderRekap(); renderDebts(); renderDreams();
 }
@@ -221,7 +220,6 @@ fillCategories(); fillFilterCategories(); fillBudgetCategories();
 const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
 const today = now.toISOString().slice(0, 10);
 $('date').value = today; $('filterMonth').value = today.slice(0, 7);
-updateCustomMonthDisplay();
 
 $('form').addEventListener('submit', e => {
   e.preventDefault();
@@ -289,10 +287,7 @@ $('list').addEventListener('click', e => {
   };
 });
 
-$('filterMonth').addEventListener('change', () => {
-  updateCustomMonthDisplay();
-  render();
-});
+$('filterMonth').addEventListener('change', render);
 $('filterCategory').addEventListener('change', render);
 
 function getFiltered() {
@@ -709,21 +704,4 @@ function renderChart() {
     group.appendChild(barInc); group.appendChild(barExp); group.appendChild(label);
     chartContainer.appendChild(group);
   });
-}
-// ================= FUNGSI TAMPILAN BULAN KUSTOM =================
-function updateCustomMonthDisplay() {
-  const monthInput = $('filterMonth').value;
-  const displayEl = $('customMonthDisplay');
-  if (!displayEl) return;
-
-  if (monthInput) {
-    const [year, month] = monthInput.split('-');
-    const date = new Date(year, month - 1, 1);
-    const label = date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { 
-      month: 'long', year: 'numeric' 
-    });
-    displayEl.textContent = label;
-  } else {
-    displayEl.textContent = userLang === 'en' ? 'All Time' : 'Semua Waktu';
-  }
 }
