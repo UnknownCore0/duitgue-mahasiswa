@@ -14,11 +14,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Naikkan versi ini untuk memaksa update CSS (v146) -->
-  <link rel="stylesheet" href="./style.css?v=153">
+  <link rel="stylesheet" href="./style.css?v=158">
 </head>
 <body>
-  <body>
   
   <!-- ================= LOADING SCREEN ================= -->
   <div id="loadingScreen">
@@ -26,8 +24,6 @@
     <div class="loader-text">Duit Gue</div>
     <div class="loader-spinner"></div>
   </div>
-
-  <main class="app-container">
 
   <main class="app-container">
     
@@ -92,10 +88,7 @@
           <button id="exportBtn" class="btn-small" aria-label="Export ke CSV" data-lang="export">📥 Export</button>
         </div>
         <div class="row">
-          <div class="month-wrapper">
-            <input type="month" id="filterMonth" aria-label="Filter bulan">
-            <span class="custom-month-text" id="customMonthDisplay"></span>
-          </div>
+          <input type="month" id="filterMonth" aria-label="Filter bulan">
           <select id="filterCategory" aria-label="Filter kategori"></select>
         </div>
         <ul id="list" class="list"></ul>
@@ -180,14 +173,13 @@
       </section>
     </section>
 
-    <!-- ================= TAB 4: IMPIAN (FASE 4) ================= -->
+    <!-- ================= TAB 4: IMPIAN ================= -->
     <section id="page-impian" class="page hidden">
       <header>
         <h2 data-lang="nav_impian">🎯 Impian & Tabungan</h2>
         <p data-lang="dream_desc">Targetkan barang impianmu.</p>
       </header>
 
-      <!-- Form Tambah Impian -->
       <section class="panel">
         <h2 data-lang="add_dream">Tambah Impian Baru</h2>
         <form id="dreamForm">
@@ -197,7 +189,6 @@
         </form>
       </section>
 
-      <!-- Daftar Impian -->
       <section class="panel">
         <h2 data-lang="dream_list">Daftar Impian</h2>
         <div id="dreamList" class="rekap-list"></div>
@@ -367,7 +358,6 @@
         <br>
         <h4>3. Permissions</h4>
         <p>This application does not request access to your camera, microphone, or location. Gallery access is only used if you voluntarily change your profile photo.</p>
-      
       </div>
     </section>
 
@@ -387,6 +377,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=153"></script>
+  <script src="./app.js?v=158"></script>
 </body>
 </html>

@@ -280,9 +280,7 @@ input[type="date"], input[type="month"] {
 .text-content p { font-size: 0.9rem; line-height: 1.6; color: var(--muted); }
 .text-content h4 { margin-top: 1rem; margin-bottom: 0.3rem; font-size: 1rem; }
 
-/* =========================================
-   STYLING REKAP (FASE 3)
-   ========================================= */
+/* STYLING REKAP */
 .rekap-list { display: grid; gap: 1rem; }
 .rekap-month-card { background: var(--bg); border-radius: 12px; padding: 1rem; border: 1px solid var(--border); }
 .rekap-month-header { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px dashed var(--border); }
@@ -293,9 +291,57 @@ input[type="date"], input[type="month"] {
 .rekap-row.expense span:last-child { color: var(--expense); }
 .rekap-row.total span:last-child { color: var(--primary); }
 
-/* =========================================
-   MEDIA QUERY MOBILE (PENJINAKAN TOTAL)
-   ========================================= */
+/* STYLING HUTANG */
+.debt-card { background: var(--bg); border-radius: 12px; padding: 1rem; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.5rem; position: relative; }
+.debt-card.paid { opacity: 0.6; text-decoration: line-through; background: var(--card); }
+.debt-header { display: flex; justify-content: space-between; font-weight: 700; }
+.debt-header.owe { color: var(--expense); }
+.debt-header.lend { color: var(--income); }
+.debt-amount { font-size: 1.1rem; font-weight: 800; }
+.debt-desc { font-size: 0.8rem; color: var(--muted); }
+.debt-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.btn-paid { background: var(--success); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+.btn-delete-debt { background: var(--expense); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+
+/* STYLING IMPIAN */
+.dream-card { background: var(--bg); border-radius: 12px; padding: 1rem; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.5rem; }
+.dream-header { display: flex; justify-content: space-between; font-weight: 700; }
+.dream-progress-track { height: 10px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 0.5rem; }
+.dream-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-2)); border-radius: 99px; transition: width 0.5s ease; }
+.dream-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+.dream-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.btn-add-save { background: var(--primary); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; flex: 1; }
+.btn-delete-dream { background: var(--expense); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+
+/* SCROLL KHUSUS UNTUK DAFTAR RIWAYAT */
+#list {
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+#list::-webkit-scrollbar { width: 6px; }
+#list::-webkit-scrollbar-track { background: transparent; }
+#list::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 10px; }
+#list::-webkit-scrollbar-thumb:hover { background-color: var(--muted); }
+
+/* LOADING SCREEN / SPLASH SCREEN */
+#loadingScreen {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--bg); 
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
+              visibility 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#loadingScreen.hidden { opacity: 0; visibility: hidden; }
+.loader-icon { font-size: 4rem; animation: smoothBounce 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+.loader-text { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-top: 1rem; margin-bottom: 2rem; letter-spacing: 1px; }
+.loader-spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top: 4px solid var(--primary); border-radius: 50%; animation: smoothSpin 1s linear infinite; }
+@keyframes smoothBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+@keyframes smoothSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* MEDIA QUERY MOBILE */
 @media (max-width: 520px) {
   .summary { grid-template-columns: 1fr 1fr; }
   .row { grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
@@ -329,278 +375,22 @@ input[type="date"], input[type="month"] {
     margin-left: -10px;
   }
 
-  /* KUNCI REKAP: Tetap 3 kolom, tapi diperkecil */
   #page-rekap .summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important; /* Paksa 3 kolom */
-    gap: 0.4rem !important; /* Jarak lebih sempit */
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.4rem !important;
   }
   
   #page-rekap .summary .card {
-    padding: 0.6rem 0.3rem !important; /* Padding lebih kecil */
+    padding: 0.6rem 0.3rem !important;
   }
 
   #page-rekap .summary .card span {
-    font-size: 0.65rem !important; /* Teks judul lebih kecil */
-    white-space: nowrap; /* Agar judul tidak turun baris */
+    font-size: 0.65rem !important;
+    white-space: nowrap;
   }
 
   #page-rekap .summary .card strong {
-    font-size: 0.8rem !important; /* Angka nominal lebih kecil */
-    word-break: break-all; /* Jika angka panjang, boleh turun baris */
+    font-size: 0.8rem !important;
+    word-break: break-all;
   }
-}
-/* ... (kode CSS sebelumnya) ... */
-
-/* ================= STYLING KHUSUS HUTANG ================= */
-.debt-card {
-  background: var(--bg);
-  border-radius: 12px;
-  padding: 1rem;
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  position: relative;
-}
-
-.debt-card.paid {
-  opacity: 0.6;
-  text-decoration: line-through;
-  background: var(--card);
-}
-
-.debt-header {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 700;
-}
-
-.debt-header.owe { color: var(--expense); }
-.debt-header.lend { color: var(--income); }
-
-.debt-amount {
-  font-size: 1.1rem;
-  font-weight: 800;
-}
-
-.debt-desc {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.debt-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.btn-paid {
-  background: var(--success);
-  color: white;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.btn-delete-debt {
-  background: var(--expense);
-  color: white;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-/* ... (kode CSS sebelumnya) ... */
-
-/* ================= STYLING KHUSUS IMPIAN ================= */
-.dream-card {
-  background: var(--bg);
-  border-radius: 12px;
-  padding: 1rem;
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.dream-header {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 700;
-}
-
-.dream-progress-track {
-  height: 10px;
-  background: var(--border);
-  border-radius: 99px;
-  overflow: hidden;
-  margin-top: 0.5rem;
-}
-
-.dream-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--primary-2));
-  border-radius: 99px;
-  transition: width 0.5s ease;
-}
-
-.dream-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: var(--muted);
-  margin-top: 0.3rem;
-}
-
-.dream-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.btn-add-save {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  flex: 1;
-}
-
-.btn-delete-dream {
-  background: var(--expense);
-  color: white;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-/* ... (kode CSS sebelumnya) ... */
-
-/* ================= TRIK PAKSA BULAN ================= */
-.month-wrapper {
-  position: relative;
-  width: 100%;
-  display: block;
-  overflow: hidden; /* Mencegah teks keluar kotak */
-}
-
-/* Paksa teks asli browser menjadi transparan */
-input[type="month"]::-webkit-datetime-edit-text,
-input[type="month"]::-webkit-datetime-edit-month-field,
-input[type="month"]::-webkit-datetime-edit-year-field {
-  color: transparent !important; 
-}
-
-/* Sembunyikan ikon kalender bawaan agar tidak menimpa teks buatan */
-input[type="month"]::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  position: absolute;
-  right: 0;
-  width: 100%;
-  height: 100%;
-}
-
-/* Teks buatan kita yang diletakkan di atas input */
-.custom-month-text {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none; /* Biarkan klik tembus ke input di bawahnya */
-  font-size: 0.95rem;
-  color: var(--text);
-  z-index: 2;
-  background: transparent;
-  padding: 0.7rem;
-}
-/* ... (kode CSS sebelumnya) ... */
-
-/* =========================================
-   SCROLL KHUSUS UNTUK DAFTAR RIWAYAT
-   ========================================= */
-#list {
-  max-height: 380px; /* Batas tinggi maksimal daftar riwayat */
-  overflow-y: auto;  /* Mengaktifkan scroll vertikal */
-  padding-right: 5px; /* Sedikit ruang agar scrollbar tidak menempel teks */
-}
-
-/* Mempercantik Scrollbar (Opsional, berfungsi di Chrome/Edge) */
-#list::-webkit-scrollbar {
-  width: 6px;
-}
-#list::-webkit-scrollbar-track {
-  background: transparent;
-}
-#list::-webkit-scrollbar-thumb {
-  background-color: var(--border);
-  border-radius: 10px;
-}
-#list::-webkit-scrollbar-thumb:hover {
-  background-color: var(--muted);
-}
-/* ... (kode CSS sebelumnya) ... */
-
-/* =========================================
-   LOADING SCREEN / SPLASH SCREEN (SMOOTH)
-   ========================================= */
-#loadingScreen {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: var(--bg); /* Mengikuti tema terang/gelap */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  /* Transisi halus saat menghilang */
-  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
-              visibility 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-#loadingScreen.hidden {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.loader-icon {
-  font-size: 4rem;
-  /* Animasi memantul yang sangat halus */
-  animation: smoothBounce 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.loader-text {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--text);
-  margin-top: 1rem;
-  margin-bottom: 2rem;
-  letter-spacing: 1px;
-}
-
-.loader-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--border);
-  border-top: 4px solid var(--primary);
-  border-radius: 50%;
-  /* Animasi berputar */
-  animation: smoothSpin 1s linear infinite;
-}
-
-@keyframes smoothBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
-}
-
-@keyframes smoothSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }

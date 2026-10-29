@@ -6,7 +6,7 @@ const LANG_KEY = 'lang-mahasiswa';
 const STREAK_KEY = 'streak-mahasiswa';
 const PROFILE_KEY = 'profile-mahasiswa';
 const DEBT_KEY = 'debt-mahasiswa';
-const DREAM_KEY = 'dream-mahasiswa'; // Kunci untuk Impian
+const DREAM_KEY = 'dream-mahasiswa';
 const $ = id => document.getElementById(id);
 
 const EMOJI = {
@@ -28,7 +28,7 @@ let budgets = loadData(BUDGET_KEY, {});
 let streak = loadData(STREAK_KEY, { count: 0, lastDate: null });
 let profile = loadData(PROFILE_KEY, { name: 'Halo, Mahasiswa!', photo: null });
 let debts = loadData(DEBT_KEY, []);
-let dreams = loadData(DREAM_KEY, []); // Data Impian
+let dreams = loadData(DREAM_KEY, []);
 let userLang = localStorage.getItem(LANG_KEY) || 'id';
 
 const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -68,7 +68,6 @@ const TRANSLATIONS = {
     add_debt: 'Tambah Catatan', i_owe_opt: 'Aku Berhutang', they_owe_opt: 'Orang Berhutang',
     debt_list: 'Daftar Hutang', no_debt: 'Belum ada catatan hutang.', mark_paid: 'Tandai Lunas', delete: 'Hapus',
     debt_name_placeholder: 'Nama Teman', debt_amount_placeholder: 'Jumlah (Rp)', debt_desc_placeholder: 'Keterangan (mis. Pinjam beli buku)',
-    // Impian
     dream_desc: 'Targetkan barang impianmu.', add_dream: 'Tambah Impian Baru', dream_list: 'Daftar Impian',
     no_dream: 'Belum ada impian yang ditargetkan.', dream_name_placeholder: 'Nama Impian (mis. Beli HP)', 
     dream_target_placeholder: 'Target Harga (Rp)', add_saving: 'Tambah Tabungan', target: 'Target', 
@@ -97,7 +96,6 @@ const TRANSLATIONS = {
     add_debt: 'Add Record', i_owe_opt: 'I Owe', they_owe_opt: 'They Owe',
     debt_list: 'Debt List', no_debt: 'No debt records yet.', mark_paid: 'Mark as Paid', delete: 'Delete',
     debt_name_placeholder: 'Friend\'s Name', debt_amount_placeholder: 'Amount (Rp)', debt_desc_placeholder: 'Description (e.g. Borrow for book)',
-    // Impian
     dream_desc: 'Target your dream items.', add_dream: 'Add New Dream', dream_list: 'Dream List',
     no_dream: 'No dreams targeted yet.', dream_name_placeholder: 'Dream Name (e.g. Buy Phone)', 
     dream_target_placeholder: 'Target Price (Rp)', add_saving: 'Add Saving', target: 'Target', 
@@ -127,7 +125,6 @@ function applyLanguage(lang) {
   });
 
   fillCategories(); fillFilterCategories(); fillBudgetCategories(); updateFormPlaceholders();
-  updateCustomMonthDisplay();
   updateRekapTitles();
   render(); renderChart(); renderRekap(); renderDebts(); renderDreams();
 }
@@ -221,7 +218,6 @@ fillCategories(); fillFilterCategories(); fillBudgetCategories();
 const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
 const today = now.toISOString().slice(0, 10);
 $('date').value = today; $('filterMonth').value = today.slice(0, 7);
-updateCustomMonthDisplay();
 
 $('form').addEventListener('submit', e => {
   e.preventDefault();
@@ -289,10 +285,7 @@ $('list').addEventListener('click', e => {
   };
 });
 
-$('filterMonth').addEventListener('change', () => {
-  updateCustomMonthDisplay();
-  render();
-});
+$('filterMonth').addEventListener('change', render);
 $('filterCategory').addEventListener('change', render);
 
 function getFiltered() {
@@ -710,31 +703,11 @@ function renderChart() {
     chartContainer.appendChild(group);
   });
 }
-// ================= FUNGSI TAMPILAN BULAN KUSTOM =================
-function updateCustomMonthDisplay() {
-  const monthInput = $('filterMonth').value;
-  const displayEl = $('customMonthDisplay');
-  if (!displayEl) return;
-
-  if (monthInput) {
-    const [year, month] = monthInput.split('-');
-    const date = new Date(year, month - 1, 1);
-    const label = date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { 
-      month: 'long', year: 'numeric' 
-    });
-    displayEl.textContent = label;
-  } else {
-    displayEl.textContent = userLang === 'en' ? 'All Time' : 'Semua Waktu';
-  }
-}
-// ... (kode renderChart sebelumnya) ...
 
 // ================= HILANGKAN LOADING SCREEN =================
-// Beri jeda 1 detik agar animasi terlihat, lalu hilangkan dengan halus
 window.addEventListener('load', () => {
   const loader = document.getElementById('loadingScreen');
   if (loader) {
-    // Sedikit jeda agar tidak "patah"
     setTimeout(() => {
       loader.classList.add('hidden');
     }, 1000); 
