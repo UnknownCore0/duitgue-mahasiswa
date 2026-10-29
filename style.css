@@ -281,6 +281,19 @@ input[type="date"], input[type="month"] {
 .text-content h4 { margin-top: 1rem; margin-bottom: 0.3rem; font-size: 1rem; }
 
 /* =========================================
+   STYLING REKAP (FASE 3)
+   ========================================= */
+.rekap-list { display: grid; gap: 1rem; }
+.rekap-month-card { background: var(--bg); border-radius: 12px; padding: 1rem; border: 1px solid var(--border); }
+.rekap-month-header { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px dashed var(--border); }
+.rekap-month-body { display: grid; gap: 0.3rem; font-size: 0.85rem; }
+.rekap-row { display: flex; justify-content: space-between; color: var(--muted); }
+.rekap-row span:last-child { font-weight: 600; color: var(--text); }
+.rekap-row.income span:last-child { color: var(--income); }
+.rekap-row.expense span:last-child { color: var(--expense); }
+.rekap-row.total span:last-child { color: var(--primary); }
+
+/* =========================================
    MEDIA QUERY MOBILE (PENJINAKAN TOTAL)
    ========================================= */
 @media (max-width: 520px) {
@@ -315,46 +328,24 @@ input[type="date"], input[type="month"] {
     padding: 0;
     margin-left: -10px;
   }
-}
-/* ... (kode CSS sebelumnya) ... */
 
-/* ================= STYLING UNTUK HALAMAN REKAP ================= */
-.rekap-list {
-  display: grid;
-  gap: 1rem;
-}
+  /* KUNCI REKAP: Tetap 3 kolom, tapi diperkecil */
+  #page-rekap .summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important; /* Paksa 3 kolom */
+    gap: 0.4rem !important; /* Jarak lebih sempit */
+  }
+  
+  #page-rekap .summary .card {
+    padding: 0.6rem 0.3rem !important; /* Padding lebih kecil */
+  }
 
-.rekap-month-card {
-  background: var(--bg);
-  border-radius: 12px;
-  padding: 1rem;
-  border: 1px solid var(--border);
-}
+  #page-rekap .summary .card span {
+    font-size: 0.65rem !important; /* Teks judul lebih kecil */
+    white-space: nowrap; /* Agar judul tidak turun baris */
+  }
 
-.rekap-month-header {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px dashed var(--border);
+  #page-rekap .summary .card strong {
+    font-size: 0.8rem !important; /* Angka nominal lebih kecil */
+    word-break: break-all; /* Jika angka panjang, boleh turun baris */
+  }
 }
-
-.rekap-month-body {
-  display: grid;
-  gap: 0.3rem;
-  font-size: 0.85rem;
-}
-
-.rekap-row {
-  display: flex;
-  justify-content: space-between;
-  color: var(--muted);
-}
-.rekap-row span:last-child {
-  font-weight: 600;
-  color: var(--text);
-}
-.rekap-row.income span:last-child { color: var(--income); }
-.rekap-row.expense span:last-child { color: var(--expense); }
-.rekap-row.total span:last-child { color: var(--primary); }
