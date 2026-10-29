@@ -64,7 +64,8 @@ const TRANSLATIONS = {
     total_balance: 'Total Saldo', monthly_activity: 'Aktivitas Per Bulan', no_rekap_data: 'Belum ada data transaksi di tahun ini.',
     debt_desc: 'Catat pinjaman dengan temanmu.', i_owe: 'Aku Berhutang', owe_me: 'Aku Meminjamkan',
     add_debt: 'Tambah Catatan', i_owe_opt: 'Aku Berhutang', they_owe_opt: 'Orang Berhutang',
-    debt_list: 'Daftar Hutang', no_debt: 'Belum ada catatan hutang.', mark_paid: 'Tandai Lunas', delete: 'Hapus'
+    debt_list: 'Daftar Hutang', no_debt: 'Belum ada catatan hutang.', mark_paid: 'Tandai Lunas', delete: 'Hapus',
+    debt_name_placeholder: 'Nama Teman', debt_amount_placeholder: 'Jumlah (Rp)', debt_desc_placeholder: 'Keterangan (mis. Pinjam beli buku)'
   },
   en: {
     app_desc: 'Record your daily income and expenses easily.',
@@ -87,7 +88,8 @@ const TRANSLATIONS = {
     total_balance: 'Total Balance', monthly_activity: 'Monthly Activity', no_rekap_data: 'No transaction data for this year.',
     debt_desc: 'Record loans with your friends.', i_owe: 'I Owe', owe_me: 'Owed to Me',
     add_debt: 'Add Record', i_owe_opt: 'I Owe', they_owe_opt: 'They Owe',
-    debt_list: 'Debt List', no_debt: 'No debt records yet.', mark_paid: 'Mark as Paid', delete: 'Delete'
+    debt_list: 'Debt List', no_debt: 'No debt records yet.', mark_paid: 'Mark as Paid', delete: 'Delete',
+    debt_name_placeholder: 'Friend\'s Name', debt_amount_placeholder: 'Amount (Rp)', debt_desc_placeholder: 'Description (e.g. Borrow for book)'
   }
 };
 
@@ -132,6 +134,9 @@ function updateFormPlaceholders() {
   const type = $('type').value;
   $('desc').placeholder = type === 'expense' ? TRANSLATIONS[userLang].desc_placeholder_exp : TRANSLATIONS[userLang].desc_placeholder_inc;
   $('amount').placeholder = TRANSLATIONS[userLang].amount_placeholder;
+  $('debtName').placeholder = TRANSLATIONS[userLang].debt_name_placeholder;
+  $('debtAmount').placeholder = TRANSLATIONS[userLang].debt_amount_placeholder;
+  $('debtDesc').placeholder = TRANSLATIONS[userLang].debt_desc_placeholder;
 }
 
 function applyTheme(theme, color) {
