@@ -6,6 +6,7 @@ const LANG_KEY = 'lang-mahasiswa';
 const STREAK_KEY = 'streak-mahasiswa';
 const PROFILE_KEY = 'profile-mahasiswa';
 const DEBT_KEY = 'debt-mahasiswa';
+const DREAM_KEY = 'dream-mahasiswa'; // Kunci untuk Impian
 const $ = id => document.getElementById(id);
 
 const EMOJI = {
@@ -27,6 +28,7 @@ let budgets = loadData(BUDGET_KEY, {});
 let streak = loadData(STREAK_KEY, { count: 0, lastDate: null });
 let profile = loadData(PROFILE_KEY, { name: 'Halo, Mahasiswa!', photo: null });
 let debts = loadData(DEBT_KEY, []);
+let dreams = loadData(DREAM_KEY, []); // Data Impian
 let userLang = localStorage.getItem(LANG_KEY) || 'id';
 
 const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -65,7 +67,12 @@ const TRANSLATIONS = {
     debt_desc: 'Catat pinjaman dengan temanmu.', i_owe: 'Aku Berhutang', owe_me: 'Aku Meminjamkan',
     add_debt: 'Tambah Catatan', i_owe_opt: 'Aku Berhutang', they_owe_opt: 'Orang Berhutang',
     debt_list: 'Daftar Hutang', no_debt: 'Belum ada catatan hutang.', mark_paid: 'Tandai Lunas', delete: 'Hapus',
-    debt_name_placeholder: 'Nama Teman', debt_amount_placeholder: 'Jumlah (Rp)', debt_desc_placeholder: 'Keterangan (mis. Pinjam beli buku)'
+    debt_name_placeholder: 'Nama Teman', debt_amount_placeholder: 'Jumlah (Rp)', debt_desc_placeholder: 'Keterangan (mis. Pinjam beli buku)',
+    // Impian
+    dream_desc: 'Targetkan barang impianmu.', add_dream: 'Tambah Impian Baru', dream_list: 'Daftar Impian',
+    no_dream: 'Belum ada impian yang ditargetkan.', dream_name_placeholder: 'Nama Impian (mis. Beli HP)', 
+    dream_target_placeholder: 'Target Harga (Rp)', add_saving: 'Tambah Tabungan', target: 'Target', 
+    collected: 'Terkumpul', dream_achieved: '🎉 Target Tercapai!', delete_dream: 'Hapus'
   },
   en: {
     app_desc: 'Record your daily income and expenses easily.',
@@ -89,7 +96,12 @@ const TRANSLATIONS = {
     debt_desc: 'Record loans with your friends.', i_owe: 'I Owe', owe_me: 'Owed to Me',
     add_debt: 'Add Record', i_owe_opt: 'I Owe', they_owe_opt: 'They Owe',
     debt_list: 'Debt List', no_debt: 'No debt records yet.', mark_paid: 'Mark as Paid', delete: 'Delete',
-    debt_name_placeholder: 'Friend\'s Name', debt_amount_placeholder: 'Amount (Rp)', debt_desc_placeholder: 'Description (e.g. Borrow for book)'
+    debt_name_placeholder: 'Friend\'s Name', debt_amount_placeholder: 'Amount (Rp)', debt_desc_placeholder: 'Description (e.g. Borrow for book)',
+    // Impian
+    dream_desc: 'Target your dream items.', add_dream: 'Add New Dream', dream_list: 'Dream List',
+    no_dream: 'No dreams targeted yet.', dream_name_placeholder: 'Dream Name (e.g. Buy Phone)', 
+    dream_target_placeholder: 'Target Price (Rp)', add_saving: 'Add Saving', target: 'Target', 
+    collected: 'Collected', dream_achieved: '🎉 Target Achieved!', delete_dream: 'Delete'
   }
 };
 
@@ -116,7 +128,7 @@ function applyLanguage(lang) {
 
   fillCategories(); fillFilterCategories(); fillBudgetCategories(); updateFormPlaceholders();
   updateRekapTitles();
-  render(); renderChart(); renderRekap(); renderDebts();
+  render(); renderChart(); renderRekap(); renderDebts(); renderDreams();
 }
 
 function updateRekapTitles() {
@@ -137,6 +149,8 @@ function updateFormPlaceholders() {
   $('debtName').placeholder = TRANSLATIONS[userLang].debt_name_placeholder;
   $('debtAmount').placeholder = TRANSLATIONS[userLang].debt_amount_placeholder;
   $('debtDesc').placeholder = TRANSLATIONS[userLang].debt_desc_placeholder;
+  $('dreamName').placeholder = TRANSLATIONS[userLang].dream_name_placeholder;
+  $('dreamTarget').placeholder = TRANSLATIONS[userLang].dream_target_placeholder;
 }
 
 function applyTheme(theme, color) {
@@ -475,6 +489,75 @@ $('debtForm').addEventListener('submit', (e) => {
 
 renderDebts();
 
+// ================= LOGIKA IMPIAN (FASE 4) =================
+function renderDreams() {
+  const list = $('dreamList');
+  const empty = $('dreamEmpty');
+  if (dreams.length === 0) {
+    list.innerHTML = ''; empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  
+  list.innerHTML = dreams.map(d => {
+    const pct = Math.min((d.saved / d.target) * 100, 100);
+    const isDone = d.saved >= d.target;
+    const displayStatus = isDone ? `<div style="color: var(--success); font-weight:700; font-size:0.8rem; margin-top:0.3rem;">${TRANSLATIONS[userLang].dream_achieved}</div>` : '';
+    
+    return `
+      <div class="dream-card">
+        <div class="dream-header"><span>${escapeHTML(d.name)}</span></div>
+        <div class="dream-info">
+          <span>${TRANSLATIONS[userLang].target}: ${rupiah(d.target)}</span>
+          <span>${TRANSLATIONS[userLang].collected}: ${rupiah(d.saved)}</span>
+        </div>
+        <div class="dream-progress-track">
+          <div class="dream-progress-fill" style="width: ${pct}%;"></div>
+        </div>
+        <div style="text-align: right; font-size: 0.8rem; font-weight:700; color:var(--primary);">${Math.round(pct)}%</div>
+        ${displayStatus}
+        <div class="dream-actions">
+          ${!isDone ? `<button class="btn-add-save" onclick="addSaving('${d.id}')">+ ${TRANSLATIONS[userLang].add_saving}</button>` : ''}
+          <button class="btn-delete-dream" onclick="deleteDream('${d.id}')">${TRANSLATIONS[userLang].delete_dream}</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.addSaving = function(id) {
+  const amount = prompt(userLang === 'en' ? 'Enter saving amount (Rp):' : 'Masukkan nominal tabungan (Rp):');
+  if (amount && !isNaN(amount) && Number(amount) > 0) {
+    const index = dreams.findIndex(d => d.id === id);
+    if (index > -1) {
+      dreams[index].saved += Number(amount);
+      localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+      renderDreams();
+    }
+  }
+};
+
+window.deleteDream = function(id) {
+  if (confirm(userLang === 'en' ? 'Delete this dream?' : 'Hapus impian ini?')) {
+    dreams = dreams.filter(d => d.id !== id);
+    localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+    renderDreams();
+  }
+};
+
+$('dreamForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = $('dreamName').value.trim();
+  const target = Number($('dreamTarget').value);
+  if (!name || target <= 0) return;
+  dreams.push({ id: crypto.randomUUID(), name, target, saved: 0 });
+  localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+  $('dreamName').value = ''; $('dreamTarget').value = '';
+  renderDreams();
+});
+
+renderDreams();
+
 // ================= NAVIGASI & PROFIL =================
 document.querySelectorAll('.nav-item').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -517,7 +600,7 @@ photoInput.addEventListener('change', (e) => {
 });
 
 document.getElementById('btn-backup').addEventListener('click', () => {
-  const dataToBackup = { transactions, budgets, streak, profile, debts };
+  const dataToBackup = { transactions, budgets, streak, profile, debts, dreams };
   const dataStr = JSON.stringify(dataToBackup, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -542,6 +625,7 @@ restoreInput.addEventListener('change', (e) => {
           localStorage.setItem(STREAK_KEY, JSON.stringify(parsedData.streak || { count: 0, lastDate: null }));
           localStorage.setItem(PROFILE_KEY, JSON.stringify(parsedData.profile));
           localStorage.setItem(DEBT_KEY, JSON.stringify(parsedData.debts || []));
+          localStorage.setItem(DREAM_KEY, JSON.stringify(parsedData.dreams || []));
           alert('Data berhasil dipulihkan! Halaman akan dimuat ulang.'); window.location.reload();
         } else { alert('Format file backup tidak valid.'); }
       } catch (err) { alert('Gagal membaca file. Pastikan file berekstensi .json dari aplikasi Duit Gue.'); }

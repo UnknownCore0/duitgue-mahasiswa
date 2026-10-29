@@ -14,7 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="./style.css?v=143">
+  <!-- Naikkan versi ini untuk memaksa update CSS (v146) -->
+  <link rel="stylesheet" href="./style.css?v=146">
 </head>
 <body>
   
@@ -125,14 +126,13 @@
       </div>
     </section>
 
-    <!-- ================= TAB 3: HUTANG (FASE 4) ================= -->
+    <!-- ================= TAB 3: HUTANG ================= -->
     <section id="page-hutang" class="page hidden">
       <header>
         <h2 data-lang="nav_hutang">🤝 Hutang & Piutang</h2>
         <p data-lang="debt_desc">Catat pinjaman dengan temanmu.</p>
       </header>
 
-      <!-- Ringkasan Hutang -->
       <section class="summary" style="grid-template-columns: 1fr 1fr; margin-bottom: 1rem;">
         <div class="card" style="border-left: 4px solid var(--expense);">
           <span data-lang="i_owe">Aku Berhutang</span>
@@ -144,7 +144,6 @@
         </div>
       </section>
 
-      <!-- Form Tambah Hutang -->
       <section class="panel">
         <h2 data-lang="add_debt">Tambah Catatan</h2>
         <form id="debtForm">
@@ -161,7 +160,6 @@
         </form>
       </section>
 
-      <!-- Daftar Hutang -->
       <section class="panel">
         <h2 data-lang="debt_list">Daftar Hutang</h2>
         <div id="debtList" class="rekap-list"></div>
@@ -169,10 +167,29 @@
       </section>
     </section>
 
-    <!-- ================= TAB 4: IMPIAN ================= -->
+    <!-- ================= TAB 4: IMPIAN (FASE 4) ================= -->
     <section id="page-impian" class="page hidden">
-      <header><h2 data-lang="nav_impian">🎯 Impian</h2><p>Targetkan barang impianmu.</p></header>
-      <div class="panel"><p class="empty">Halaman Impian akan segera hadir.</p></div>
+      <header>
+        <h2 data-lang="nav_impian">🎯 Impian & Tabungan</h2>
+        <p data-lang="dream_desc">Targetkan barang impianmu.</p>
+      </header>
+
+      <!-- Form Tambah Impian -->
+      <section class="panel">
+        <h2 data-lang="add_dream">Tambah Impian Baru</h2>
+        <form id="dreamForm">
+          <input type="text" id="dreamName" placeholder="Nama Impian (mis. Beli HP)" required>
+          <input type="number" id="dreamTarget" placeholder="Target Harga (Rp)" min="1000" required>
+          <button type="submit" class="btn" data-lang="save_btn">Simpan</button>
+        </form>
+      </section>
+
+      <!-- Daftar Impian -->
+      <section class="panel">
+        <h2 data-lang="dream_list">Daftar Impian</h2>
+        <div id="dreamList" class="rekap-list"></div>
+        <p id="dreamEmpty" class="empty" data-lang="no_dream">Belum ada impian yang ditargetkan.</p>
+      </section>
     </section>
 
     <!-- ================= TAB 5: PROFIL ================= -->
@@ -233,7 +250,7 @@
       </div>
     </section>
 
-    <!-- HALAMAN TEMA, BAHASA, DANA, INFO, PRIVACY (SAMA SEPERTI SEBELUMNYA) -->
+    <!-- HALAMAN TEMA, BAHASA, DANA, INFO, PRIVACY -->
     <section id="page-theme" class="page hidden">
       <header class="sub-header">
         <button class="back-btn" id="backToProfileFromTheme">‹</button>
@@ -339,6 +356,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=143"></script>
+  <script src="./app.js?v=146"></script>
 </body>
 </html>
