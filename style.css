@@ -481,3 +481,68 @@ input[type="date"], input[type="month"] {
   font-size: 0.8rem;
   cursor: pointer;
 }
+/* ... (kode CSS sebelumnya) ... */
+
+/* ================= TRIK PAKSA BULAN ================= */
+.month-wrapper {
+  position: relative;
+  width: 100%;
+  display: block;
+  overflow: hidden; /* Mencegah teks keluar kotak */
+}
+
+/* Paksa teks asli browser menjadi transparan */
+input[type="month"]::-webkit-datetime-edit-text,
+input[type="month"]::-webkit-datetime-edit-month-field,
+input[type="month"]::-webkit-datetime-edit-year-field {
+  color: transparent !important; 
+}
+
+/* Sembunyikan ikon kalender bawaan agar tidak menimpa teks buatan */
+input[type="month"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Teks buatan kita yang diletakkan di atas input */
+.custom-month-text {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* Biarkan klik tembus ke input di bawahnya */
+  font-size: 0.95rem;
+  color: var(--text);
+  z-index: 2;
+  background: transparent;
+  padding: 0.7rem;
+}
+/* ... (kode CSS sebelumnya) ... */
+
+/* =========================================
+   SCROLL KHUSUS UNTUK DAFTAR RIWAYAT
+   ========================================= */
+#list {
+  max-height: 380px; /* Batas tinggi maksimal daftar riwayat */
+  overflow-y: auto;  /* Mengaktifkan scroll vertikal */
+  padding-right: 5px; /* Sedikit ruang agar scrollbar tidak menempel teks */
+}
+
+/* Mempercantik Scrollbar (Opsional, berfungsi di Chrome/Edge) */
+#list::-webkit-scrollbar {
+  width: 6px;
+}
+#list::-webkit-scrollbar-track {
+  background: transparent;
+}
+#list::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 10px;
+}
+#list::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted);
+}
