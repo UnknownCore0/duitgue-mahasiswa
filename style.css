@@ -546,3 +546,61 @@ input[type="month"]::-webkit-calendar-picker-indicator {
 #list::-webkit-scrollbar-thumb:hover {
   background-color: var(--muted);
 }
+/* ... (kode CSS sebelumnya) ... */
+
+/* =========================================
+   LOADING SCREEN / SPLASH SCREEN (SMOOTH)
+   ========================================= */
+#loadingScreen {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--bg); /* Mengikuti tema terang/gelap */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  /* Transisi halus saat menghilang */
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
+              visibility 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#loadingScreen.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loader-icon {
+  font-size: 4rem;
+  /* Animasi memantul yang sangat halus */
+  animation: smoothBounce 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.loader-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  letter-spacing: 1px;
+}
+
+.loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border);
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  /* Animasi berputar */
+  animation: smoothSpin 1s linear infinite;
+}
+
+@keyframes smoothBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes smoothSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
