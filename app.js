@@ -5,6 +5,7 @@ const COLOR_KEY = 'color-mahasiswa';
 const LANG_KEY = 'lang-mahasiswa';
 const STREAK_KEY = 'streak-mahasiswa';
 const PROFILE_KEY = 'profile-mahasiswa';
+const DEBT_KEY = 'debt-mahasiswa';
 const $ = id => document.getElementById(id);
 
 const EMOJI = {
@@ -25,13 +26,13 @@ let transactions = loadData(STORAGE_KEY, []);
 let budgets = loadData(BUDGET_KEY, {}); 
 let streak = loadData(STREAK_KEY, { count: 0, lastDate: null });
 let profile = loadData(PROFILE_KEY, { name: 'Halo, Mahasiswa!', photo: null });
+let debts = loadData(DEBT_KEY, []);
 let userLang = localStorage.getItem(LANG_KEY) || 'id';
 
 const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
 function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
-// Format tanggal dinamis
 function formatDate(iso) {
   const date = new Date(iso + 'T00:00:00');
   return date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { 
@@ -41,7 +42,6 @@ function formatDate(iso) {
 
 function getTodayString() { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
 
-// KAMUS BAHASA
 const TRANSLATIONS = {
   id: {
     app_desc: 'Catat pemasukan dan pengeluaran harianmu dengan mudah.',
@@ -61,7 +61,10 @@ const TRANSLATIONS = {
     cat_expense: ['Makan', 'Transport', 'Kuliah', 'Hiburan', 'Kos & Tagihan', 'Lainnya'],
     cat_income: ['Uang Saku', 'Beasiswa', 'Gaji / Part-time', 'Hadiah', 'Lainnya'],
     rekap_title: '📊 Rekap Keuangan', rekap_desc: 'Lihat ringkasan dan evaluasi keuanganmu.',
-    total_balance: 'Total Saldo', monthly_activity: 'Aktivitas Per Bulan', no_rekap_data: 'Belum ada data transaksi di tahun ini.'
+    total_balance: 'Total Saldo', monthly_activity: 'Aktivitas Per Bulan', no_rekap_data: 'Belum ada data transaksi di tahun ini.',
+    debt_desc: 'Catat pinjaman dengan temanmu.', i_owe: 'Aku Berhutang', owe_me: 'Aku Meminjamkan',
+    add_debt: 'Tambah Catatan', i_owe_opt: 'Aku Berhutang', they_owe_opt: 'Orang Berhutang',
+    debt_list: 'Daftar Hutang', no_debt: 'Belum ada catatan hutang.', mark_paid: 'Tandai Lunas', delete: 'Hapus'
   },
   en: {
     app_desc: 'Record your daily income and expenses easily.',
@@ -81,7 +84,10 @@ const TRANSLATIONS = {
     cat_expense: ['Food', 'Transport', 'College', 'Entertainment', 'Rent & Bills', 'Others'],
     cat_income: ['Allowance', 'Scholarship', 'Salary / Part-time', 'Gift', 'Others'],
     rekap_title: '📊 Financial Summary', rekap_desc: 'View your financial summary and evaluation.',
-    total_balance: 'Total Balance', monthly_activity: 'Monthly Activity', no_rekap_data: 'No transaction data for this year.'
+    total_balance: 'Total Balance', monthly_activity: 'Monthly Activity', no_rekap_data: 'No transaction data for this year.',
+    debt_desc: 'Record loans with your friends.', i_owe: 'I Owe', owe_me: 'Owed to Me',
+    add_debt: 'Add Record', i_owe_opt: 'I Owe', they_owe_opt: 'They Owe',
+    debt_list: 'Debt List', no_debt: 'No debt records yet.', mark_paid: 'Mark as Paid', delete: 'Delete'
   }
 };
 
@@ -106,28 +112,18 @@ function applyLanguage(lang) {
     btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
   });
 
-  fillCategories(); 
-  fillFilterCategories();
-  fillBudgetCategories();
-  updateFormPlaceholders();
-  updateRekapTitles(); // Update judul rekap
-
-  render(); 
-  renderChart();
-  renderRekap(); // Render ulang isi rekap
+  fillCategories(); fillFilterCategories(); fillBudgetCategories(); updateFormPlaceholders();
+  updateRekapTitles();
+  render(); renderChart(); renderRekap(); renderDebts();
 }
 
 function updateRekapTitles() {
-  // Update judul halaman Rekap
   const rekapHeader = document.querySelector('#page-rekap header h2');
   if (rekapHeader) rekapHeader.textContent = TRANSLATIONS[userLang].rekap_title;
-  
   const rekapDesc = document.querySelector('#page-rekap header p');
   if (rekapDesc) rekapDesc.textContent = TRANSLATIONS[userLang].rekap_desc;
-
   const totalBalanceLabel = document.querySelector('#rekapTotalBalance').previousElementSibling;
   if (totalBalanceLabel) totalBalanceLabel.textContent = TRANSLATIONS[userLang].total_balance;
-
   const monthlyActivityTitle = document.querySelector('#rekapList').previousElementSibling;
   if (monthlyActivityTitle) monthlyActivityTitle.textContent = TRANSLATIONS[userLang].monthly_activity;
 }
@@ -138,7 +134,6 @@ function updateFormPlaceholders() {
   $('amount').placeholder = TRANSLATIONS[userLang].amount_placeholder;
 }
 
-// SISTEM TEMA & WARNA
 function applyTheme(theme, color) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.color = color;
@@ -161,7 +156,6 @@ $('themeToggle').addEventListener('click', () => {
   applyTheme(newTheme, document.documentElement.dataset.color);
 });
 
-// STREAK
 function updateStreak() {
   const todayStr = getTodayString();
   if (streak.lastDate === todayStr) return;
@@ -186,19 +180,16 @@ function renderStreak() {
 }
 checkStreakValidity();
 
-// DROPDOWN KATEGORI
 function fillCategories() {
   const type = $('type').value;
   const catList = TRANSLATIONS[userLang][type === 'expense' ? 'cat_expense' : 'cat_income'];
   $('category').innerHTML = catList.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
   updateFormPlaceholders();
 }
-
 function fillFilterCategories() {
   const allCat = [...new Set([...TRANSLATIONS[userLang].cat_expense, ...TRANSLATIONS[userLang].cat_income])];
   $('filterCategory').innerHTML = `<option value="all">${TRANSLATIONS[userLang].all_cat}</option>` + allCat.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
 }
-
 function fillBudgetCategories() {
   const catList = TRANSLATIONS[userLang].cat_expense;
   $('budgetCategory').innerHTML = catList.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
@@ -366,24 +357,19 @@ function renderBreakdown(data) {
 
 render();
 
-// ================= LOGIKA REKAP (FASE 3) =================
 function initRekapYears() {
   const yearSelect = $('rekapYear');
   const currentYear = new Date().getFullYear();
   let years = [...new Set(transactions.map(t => t.date.split('-')[0]))]; 
   if (years.length === 0) years.push(currentYear.toString()); 
-  
   years.sort((a, b) => b - a); 
-  
   yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
 }
 
 function renderRekap() {
   const selectedYear = $('rekapYear').value;
   if (!selectedYear) return;
-
   const yearTransactions = transactions.filter(t => t.date.startsWith(selectedYear));
-
   const totalIncome = yearTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const totalExpense = yearTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   
@@ -397,7 +383,6 @@ function renderRekap() {
   months.forEach(m => {
     const monthStr = `${selectedYear}-${m}`;
     const monthTrans = yearTransactions.filter(t => t.date.startsWith(monthStr));
-    
     const monthDate = new Date(selectedYear, parseInt(m) - 1, 1);
     const monthName = monthDate.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'long' });
 
@@ -405,12 +390,9 @@ function renderRekap() {
       const inc = monthTrans.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
       const exp = monthTrans.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
       const diff = inc - exp;
-
       rekapHTML += `
         <div class="rekap-month-card">
-          <div class="rekap-month-header">
-            <span>${monthName}</span>
-          </div>
+          <div class="rekap-month-header"><span>${monthName}</span></div>
           <div class="rekap-month-body">
             <div class="rekap-row income"><span>${TRANSLATIONS[userLang].income}</span><span>+${rupiah(inc)}</span></div>
             <div class="rekap-row expense"><span>${TRANSLATIONS[userLang].expense}</span><span>-${rupiah(exp)}</span></div>
@@ -421,24 +403,72 @@ function renderRekap() {
     }
   });
 
-  if (!rekapHTML) {
-    rekapHTML = `<p class="empty">${TRANSLATIONS[userLang].no_rekap_data}</p>`;
-  }
-
+  if (!rekapHTML) rekapHTML = `<p class="empty">${TRANSLATIONS[userLang].no_rekap_data}</p>`;
   $('rekapList').innerHTML = rekapHTML;
 }
 
 $('rekapYear').addEventListener('change', renderRekap);
-
 initRekapYears();
 renderRekap();
 
-// Update initRekapYears saat ada transaksi baru
 const originalUpdateStreak = updateStreak;
-updateStreak = function() {
-  originalUpdateStreak();
-  initRekapYears(); 
+updateStreak = function() { originalUpdateStreak(); initRekapYears(); };
+
+// ================= LOGIKA HUTANG (FASE 4) =================
+function renderDebts() {
+  const list = $('debtList');
+  const empty = $('debtEmpty');
+  if (debts.length === 0) {
+    list.innerHTML = ''; empty.style.display = 'block';
+    $('totalIOwe').textContent = rupiah(0); $('totalOweMe').textContent = rupiah(0);
+    return;
+  }
+  empty.style.display = 'none';
+  let totalOwe = 0; let totalLend = 0;
+  const sortedDebts = [...debts].sort((a, b) => a.isPaid - b.isPaid);
+  list.innerHTML = sortedDebts.map(d => {
+    if (d.type === 'owe' && !d.isPaid) totalOwe += d.amount;
+    if (d.type === 'lend' && !d.isPaid) totalLend += d.amount;
+    const isOwe = d.type === 'owe';
+    const statusText = isOwe ? TRANSLATIONS[userLang].i_owe : TRANSLATIONS[userLang].owe_me;
+    const statusClass = isOwe ? 'owe' : 'lend';
+    const paidClass = d.isPaid ? 'paid' : '';
+    const btnPaid = d.isPaid ? '' : `<button class="btn-paid" onclick="markPaid('${d.id}')">${TRANSLATIONS[userLang].mark_paid}</button>`;
+    return `
+      <div class="debt-card ${paidClass}">
+        <div class="debt-header ${statusClass}"><span>${escapeHTML(d.name)}</span><span>${statusText}</span></div>
+        <div class="debt-amount">${rupiah(d.amount)}</div>
+        ${d.desc ? `<div class="debt-desc">${escapeHTML(d.desc)}</div>` : ''}
+        <div class="debt-actions">${btnPaid}<button class="btn-delete-debt" onclick="deleteDebt('${d.id}')">${TRANSLATIONS[userLang].delete}</button></div>
+      </div>`;
+  }).join('');
+  $('totalIOwe').textContent = rupiah(totalOwe); $('totalOweMe').textContent = rupiah(totalLend);
+}
+
+window.markPaid = function(id) {
+  const index = debts.findIndex(d => d.id === id);
+  if (index > -1) { debts[index].isPaid = true; localStorage.setItem(DEBT_KEY, JSON.stringify(debts)); renderDebts(); }
 };
+
+window.deleteDebt = function(id) {
+  if (confirm('Yakin ingin menghapus catatan ini?')) {
+    debts = debts.filter(d => d.id !== id); localStorage.setItem(DEBT_KEY, JSON.stringify(debts)); renderDebts();
+  }
+};
+
+$('debtForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = $('debtName').value.trim();
+  const amount = Number($('debtAmount').value);
+  const desc = $('debtDesc').value.trim();
+  if (!name || amount <= 0) return;
+  debts.push({ id: crypto.randomUUID(), type: $('debtType').value, name, amount, desc, isPaid: false });
+  localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+  $('debtName').value = ''; $('debtAmount').value = ''; $('debtDesc').value = '';
+  renderDebts();
+});
+
+renderDebts();
 
 // ================= NAVIGASI & PROFIL =================
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -481,16 +511,13 @@ photoInput.addEventListener('change', (e) => {
   }
 });
 
-// BACKUP & RESTORE
 document.getElementById('btn-backup').addEventListener('click', () => {
-  const dataToBackup = { transactions, budgets, streak, profile };
+  const dataToBackup = { transactions, budgets, streak, profile, debts };
   const dataStr = JSON.stringify(dataToBackup, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href = url;
-  link.download = `DuitGue_Backup_${today}.json`;
-  link.click();
+  link.href = url; link.download = `DuitGue_Backup_${today}.json`; link.click();
   URL.revokeObjectURL(url);
 });
 
@@ -509,8 +536,8 @@ restoreInput.addEventListener('change', (e) => {
           localStorage.setItem(BUDGET_KEY, JSON.stringify(parsedData.budgets || {}));
           localStorage.setItem(STREAK_KEY, JSON.stringify(parsedData.streak || { count: 0, lastDate: null }));
           localStorage.setItem(PROFILE_KEY, JSON.stringify(parsedData.profile));
-          alert('Data berhasil dipulihkan! Halaman akan dimuat ulang.');
-          window.location.reload();
+          localStorage.setItem(DEBT_KEY, JSON.stringify(parsedData.debts || []));
+          alert('Data berhasil dipulihkan! Halaman akan dimuat ulang.'); window.location.reload();
         } else { alert('Format file backup tidak valid.'); }
       } catch (err) { alert('Gagal membaca file. Pastikan file berekstensi .json dari aplikasi Duit Gue.'); }
     };
@@ -518,7 +545,6 @@ restoreInput.addEventListener('change', (e) => {
   }
 });
 
-// FUNGSI NAVIGASI SUB-MENU
 function showPage(pageId) {
   document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
   document.getElementById(pageId).classList.remove('hidden');
@@ -537,12 +563,9 @@ document.querySelectorAll('.btn-lang').forEach(btn => {
   btn.addEventListener('click', () => applyLanguage(btn.getAttribute('data-lang')));
 });
 
-// KHUSUS DANA STATEMENT
 document.getElementById('btn-dana-statement').addEventListener('click', () => {
   showPage('page-dana-statement');
-  setTimeout(() => {
-    renderChart();
-  }, 50); 
+  setTimeout(() => { renderChart(); }, 50); 
 });
 document.getElementById('backToProfileFromDana').addEventListener('click', () => showPage('page-profil'));
 
@@ -556,55 +579,40 @@ document.getElementById('btn-bantuan').addEventListener('click', () => {
 });
 document.getElementById('btn-privacy').addEventListener('click', () => showPage('page-privacy'));
 
-// FUNGSI RENDER GRAFIK
 function renderChart() {
   const chartContainer = document.getElementById('statChart');
   if (!chartContainer) return;
   chartContainer.innerHTML = ''; 
-
   const todayDate = new Date();
   const currentYear = todayDate.getFullYear();
   const currentMonth = todayDate.getMonth();
-
   const monthsData = [];
   for (let i = 1; i >= 0; i--) {
     const d = new Date(currentYear, currentMonth - i, 1);
     const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    
     const label = d.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'short' });
-    
     const inc = transactions.filter(t => t.type === 'income' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
     const exp = transactions.filter(t => t.type === 'expense' && t.date.startsWith(monthStr)).reduce((s, t) => s + t.amount, 0);
-    
     monthsData.push({ label, inc, exp });
   }
-
   const maxVal = Math.max(...monthsData.flatMap(m => [m.inc, m.exp]), 10000);
-
   monthsData.forEach(data => {
     const group = document.createElement('div');
     group.className = 'chart-bar-group';
-
     const barInc = document.createElement('div');
     barInc.className = 'chart-bar income';
     const heightInc = data.inc > 0 ? (data.inc / maxVal) * 100 : 0;
     barInc.style.height = `${Math.max(heightInc, 2)}%`; 
     if (data.inc > 0) barInc.title = `Pemasukan: ${rupiah(data.inc)}`;
-    
     const barExp = document.createElement('div');
     barExp.className = 'chart-bar expense';
     const heightExp = data.exp > 0 ? (data.exp / maxVal) * 100 : 0;
     barExp.style.height = `${Math.max(heightExp, 2)}%`;
     if (data.exp > 0) barExp.title = `Pengeluaran: ${rupiah(data.exp)}`;
-
     const label = document.createElement('div');
     label.className = 'chart-label';
     label.textContent = data.label;
-
-    group.appendChild(barInc);
-    group.appendChild(barExp);
-    group.appendChild(label);
-    
+    group.appendChild(barInc); group.appendChild(barExp); group.appendChild(label);
     chartContainer.appendChild(group);
   });
 }

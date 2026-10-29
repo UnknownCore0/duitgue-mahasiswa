@@ -349,3 +349,67 @@ input[type="date"], input[type="month"] {
     word-break: break-all; /* Jika angka panjang, boleh turun baris */
   }
 }
+/* ... (kode CSS sebelumnya) ... */
+
+/* ================= STYLING KHUSUS HUTANG ================= */
+.debt-card {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.debt-card.paid {
+  opacity: 0.6;
+  text-decoration: line-through;
+  background: var(--card);
+}
+
+.debt-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+}
+
+.debt-header.owe { color: var(--expense); }
+.debt-header.lend { color: var(--income); }
+
+.debt-amount {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.debt-desc {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.debt-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.btn-paid {
+  background: var(--success);
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.btn-delete-debt {
+  background: var(--expense);
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}

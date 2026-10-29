@@ -14,8 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Naikkan versi ini untuk memaksa update CSS (v137) -->
-  <link rel="stylesheet" href="./style.css?v=140">
+  <link rel="stylesheet" href="./style.css?v=142">
 </head>
 <body>
   
@@ -95,26 +94,20 @@
       </section>
     </section>
 
-    <!-- ================= TAB 2: REKAP (FASE 3) ================= -->
+    <!-- ================= TAB 2: REKAP ================= -->
     <section id="page-rekap" class="page hidden">
       <header>
         <h2 data-lang="nav_rekap">📊 Rekap Keuangan</h2>
-        <p>Lihat ringkasan dan evaluasi keuanganmu.</p>
+        <p data-lang="rekap_desc">Lihat ringkasan dan evaluasi keuanganmu.</p>
       </header>
-
-      <!-- Filter Tahun -->
       <div class="panel" style="padding: 1rem; margin-bottom: 1rem;">
         <div class="row" style="grid-template-columns: 1fr;">
-          <select id="rekapYear" style="text-align: center; font-weight: 600;">
-            <!-- Diisi oleh JS -->
-          </select>
+          <select id="rekapYear" style="text-align: center; font-weight: 600;"></select>
         </div>
       </div>
-
-      <!-- Ringkasan Tahunan -->
       <section class="summary" style="grid-template-columns: repeat(3, 1fr);">
         <div class="card balance-card" style="background: linear-gradient(135deg, var(--primary), var(--primary-2));">
-          <span>Total Saldo</span>
+          <span data-lang="total_balance">Total Saldo</span>
           <strong id="rekapTotalBalance">Rp0</strong>
         </div>
         <div class="card income">
@@ -126,26 +119,60 @@
           <strong id="rekapTotalExpense">Rp0</strong>
         </div>
       </section>
-
-      <!-- Tabel Rekap Bulanan -->
       <div class="panel">
-        <h3 style="font-size: 1rem; margin-bottom: 1rem;">Aktivitas Per Bulan</h3>
-        <div id="rekapList" class="rekap-list">
-          <!-- Diisi oleh JS -->
-        </div>
+        <h3 style="font-size: 1rem; margin-bottom: 1rem;" data-lang="monthly_activity">Aktivitas Per Bulan</h3>
+        <div id="rekapList" class="rekap-list"></div>
       </div>
     </section>
 
-    <!-- ================= TAB 3: HUTANG ================= -->
+    <!-- ================= TAB 3: HUTANG (FASE 4) ================= -->
     <section id="page-hutang" class="page hidden">
-      <header><h2 data-lang="nav_hutang">🤝 Hutang</h2><p>Catat pinjaman dengan temanmu.</p></header>
-      <div class="panel"><p class="empty">Halaman Hutang akan segera hadir (Fase 4).</p></div>
+      <header>
+        <h2 data-lang="nav_hutang">🤝 Hutang & Piutang</h2>
+        <p data-lang="debt_desc">Catat pinjaman dengan temanmu.</p>
+      </header>
+
+      <!-- Ringkasan Hutang -->
+      <section class="summary" style="grid-template-columns: 1fr 1fr; margin-bottom: 1rem;">
+        <div class="card" style="border-left: 4px solid var(--expense);">
+          <span data-lang="i_owe">Aku Berhutang</span>
+          <strong id="totalIOwe" style="color: var(--expense);">Rp0</strong>
+        </div>
+        <div class="card" style="border-left: 4px solid var(--income);">
+          <span data-lang="owe_me">Aku Meminjamkan</span>
+          <strong id="totalOweMe" style="color: var(--income);">Rp0</strong>
+        </div>
+      </section>
+
+      <!-- Form Tambah Hutang -->
+      <section class="panel">
+        <h2 data-lang="add_debt">Tambah Catatan</h2>
+        <form id="debtForm">
+          <div class="row">
+            <select id="debtType" aria-label="Jenis hutang">
+              <option value="owe" data-lang="i_owe_opt">Aku Berhutang</option>
+              <option value="lend" data-lang="they_owe_opt">Orang Berhutang</option>
+            </select>
+            <input type="text" id="debtName" placeholder="Nama Teman" required>
+          </div>
+          <input type="number" id="debtAmount" placeholder="Jumlah (Rp)" min="1" required>
+          <input type="text" id="debtDesc" placeholder="Keterangan (mis. Pinjam beli buku)" maxlength="50">
+          <button type="submit" class="btn" data-lang="save_btn">Simpan</button>
+        </form>
+      </section>
+
+      <!-- Daftar Hutang -->
+      <section class="panel">
+        <h2 data-lang="debt_list">Daftar Hutang</h2>
+        <div id="debtList" class="rekap-list"></div>
+        <p id="debtEmpty" class="empty" data-lang="no_debt">Belum ada catatan hutang.</p>
+      </section>
     </section>
 
     <!-- ================= TAB 4: IMPIAN ================= -->
     <section id="page-impian" class="page hidden">
       <header><h2 data-lang="nav_impian">🎯 Impian</h2><p>Targetkan barang impianmu.</p></header>
-      <div class="panel"><p class="empty">Halaman Impian akan segera hadir (Fase 4).</p></div>
+      <div class="panel"><p class="empty">Halaman Impian akan segera hadir.</p></div>
     </section>
 
     <!-- ================= TAB 5: PROFIL ================= -->
@@ -206,7 +233,7 @@
       </div>
     </section>
 
-    <!-- ================= HALAMAN TEMA ================= -->
+    <!-- HALAMAN TEMA, BAHASA, DANA, INFO, PRIVACY (SAMA SEPERTI SEBELUMNYA) -->
     <section id="page-theme" class="page hidden">
       <header class="sub-header">
         <button class="back-btn" id="backToProfileFromTheme">‹</button>
@@ -224,7 +251,6 @@
       </div>
     </section>
 
-    <!-- ================= HALAMAN BAHASA ================= -->
     <section id="page-language" class="page hidden">
       <header class="sub-header">
         <button class="back-btn" id="backToProfileFromLang">‹</button>
@@ -238,7 +264,6 @@
       </div>
     </section>
 
-    <!-- ================= HALAMAN DANA STATEMENT ================= -->
     <section id="page-dana-statement" class="page hidden">
       <header class="sub-header">
         <button class="back-btn" id="backToProfileFromDana">‹</button>
@@ -256,7 +281,6 @@
       </div>
     </section>
 
-    <!-- ================= HALAMAN INFO UMUM ================= -->
     <section id="page-info-umum" class="page hidden">
       <header class="sub-header">
         <button class="back-btn" id="backToProfile">‹</button>
@@ -277,7 +301,6 @@
       </div>
     </section>
 
-    <!-- ================= HALAMAN PRIVACY NOTICE ================= -->
     <section id="page-privacy" class="page hidden">
       <header class="sub-header">
         <button class="back-btn" id="backToInfo">‹</button>
@@ -316,6 +339,6 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=140"></script>
+  <script src="./app.js?v=142"></script>
 </body>
 </html>
