@@ -1,4 +1,4 @@
-const CACHE_NAME = 'duitgue-v1'; // Naikkan versi ini setiap kali update kode
+const CACHE_NAME = 'duitgue-v2'; // Naikkan versi ini setiap kali update kode
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
