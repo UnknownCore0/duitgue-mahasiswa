@@ -302,11 +302,23 @@ function getFiltered() {
 }
 
 function render() {
-  const data = getFiltered();
+  const data = getFiltered(); // Data yang sudah difilter per bulan
+  
+  // 1. Hitung Pemasukan & Pengeluaran (Hanya untuk bulan yang dipilih)
   const income = data.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const expense = data.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  $('income').textContent = rupiah(income); $('expense').textContent = rupiah(expense);
-  $('balance').textContent = rupiah(income - expense); $('difference').textContent = rupiah(income - expense);
+  
+  // 2. Hitung Saldo Kumulatif (Dari SEMUA transaksi, bukan hanya bulan ini)
+  const totalIncomeAll = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExpenseAll = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const cumulativeBalance = totalIncomeAll - totalExpenseAll;
+
+  // Tampilkan angka
+  $('income').textContent = rupiah(income); 
+  $('expense').textContent = rupiah(expense);
+  $('balance').textContent = rupiah(cumulativeBalance); // Saldo pakai kumulatif
+  $('difference').textContent = rupiah(income - expense); // Selisih tetap bulan ini
+  
   $('empty').style.display = data.length ? 'none' : 'block';
   
   $('list').innerHTML = data.map(t => {
