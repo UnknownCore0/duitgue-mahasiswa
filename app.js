@@ -302,14 +302,12 @@ function getFiltered() {
 }
 
 function render() {
-  const data = getFiltered(); // Data bulan yang dipilih
-  const currentMonth = $('filterMonth').value; // Format: "YYYY-MM"
+  const data = getFiltered();
+  const currentMonth = $('filterMonth').value;
 
-  // 1. Pemasukan & Pengeluaran BULAN INI
   const income = data.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const expense = data.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
-  // 2. Hitung Saldo Awal (dari semua transaksi SEBELUM bulan ini)
   let openingBalance = 0;
   if (currentMonth) {
     const allBefore = transactions.filter(t => t.date < currentMonth + '-01');
@@ -318,13 +316,11 @@ function render() {
     openingBalance = incBefore - expBefore;
   }
 
-  // 3. Saldo Bulan Ini = Saldo Awal + (Pemasukan - Pengeluaran)
   const currentBalance = openingBalance + (income - expense);
 
-  // Tampilkan
   $('income').textContent = rupiah(income); 
   $('expense').textContent = rupiah(expense);
-  $('balance').textContent = rupiah(currentBalance); // Saldo bulan ini
+  $('balance').textContent = rupiah(currentBalance);
   $('difference').textContent = rupiah(income - expense);
   
   $('empty').style.display = data.length ? 'none' : 'block';
@@ -406,7 +402,9 @@ function initRekapYears() {
 function renderRekap() {
   const selectedYear = $('rekapYear').value;
   if (!selectedYear) return;
-  const yearTransactions = transactions.filter(t => t.date.startsWith(selectedYear));
+  
+  const yearTransactions = transactions.filter(t => t.date.startsWith(selectedYear)).sort((a, b) => a.date.localeCompare(b.date));
+
   const totalIncome = yearTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const totalExpense = yearTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   
@@ -416,6 +414,7 @@ function renderRekap() {
 
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
   let rekapHTML = '';
+  let runningBalance = 0;
 
   months.forEach(m => {
     const monthStr = `${selectedYear}-${m}`;
@@ -426,14 +425,15 @@ function renderRekap() {
     if (monthTrans.length > 0) {
       const inc = monthTrans.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
       const exp = monthTrans.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-      const diff = inc - exp;
+      runningBalance += (inc - exp);
+
       rekapHTML += `
         <div class="rekap-month-card">
           <div class="rekap-month-header"><span>${monthName}</span></div>
           <div class="rekap-month-body">
             <div class="rekap-row income"><span>${TRANSLATIONS[userLang].income}</span><span>+${rupiah(inc)}</span></div>
             <div class="rekap-row expense"><span>${TRANSLATIONS[userLang].expense}</span><span>-${rupiah(exp)}</span></div>
-            <div class="rekap-row total"><span>${TRANSLATIONS[userLang].diff}</span><span>${rupiah(diff)}</span></div>
+            <div class="rekap-row total"><span>Saldo Berjalan</span><span>${rupiah(runningBalance)}</span></div>
           </div>
         </div>
       `;
