@@ -301,46 +301,55 @@ function getFiltered() {
   return transactions.filter(t => (!month || t.date.startsWith(month)) && (standardCat === 'all' || t.category === standardCat)).sort((a, b) => b.date.localeCompare(a.date) || (b.id > a.id ? 1 : -1));
 }
 
-function render() {
-  const data = getFiltered(); // Data bulan yang dipilih
-  const currentMonth = $('filterMonth').value; // Format: "YYYY-MM"
-
-  // 1. Pemasukan & Pengeluaran BULAN INI
-  const income = data.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const expense = data.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-
-  // 2. Hitung Saldo Awal (dari semua transaksi SEBELUM bulan ini)
-  let openingBalance = 0;
-  if (currentMonth) {
-    const allBefore = transactions.filter(t => t.date < currentMonth + '-01');
-    const incBefore = allBefore.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const expBefore = allBefore.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    openingBalance = incBefore - expBefore;
-  }
-
-  // 3. Saldo Bulan Ini = Saldo Awal + (Pemasukan - Pengeluaran)
-  const currentBalance = openingBalance + (income - expense);
-
-  // Tampilkan
-  $('income').textContent = rupiah(income); 
-  $('expense').textContent = rupiah(expense);
-  $('balance').textContent = rupiah(currentBalance); // Saldo bulan ini
-  $('difference').textContent = rupiah(income - expense);
+function renderRekap() {
+  const selectedYear = $('rekapYear').value;
+  if (!selectedYear) return;
   
-  $('empty').style.display = data.length ? 'none' : 'block';
+  // Ambil semua transaksi tahun ini, urutkan dari Januari ke Desember
+  const yearTransactions = transactions.filter(t => t.date.startsWith(selectedYear)).sort((a, b) => a.date.localeCompare(b.date));
+
+  const totalIncome = yearTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExpense = yearTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   
-  $('list').innerHTML = data.map(t => {
-    const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === t.category) || t.category : t.category;
-    return `
-    <li class="item" data-id="${t.id}">
-      <span class="item-emoji">${emojiFor(displayCat)}</span>
-      <div class="item-info"><strong>${escapeHTML(t.desc)}</strong><small>${escapeHTML(displayCat)} · ${formatDate(t.date)}</small></div>
-      <span class="amount ${t.type}">${t.type === 'income' ? '+' : '-'}${rupiah(t.amount)}</span>
-      <button class="delete" data-id="${t.id}">🗑</button>
-    </li>`;
-  }).join('');
+  // Total Saldo = Total Pemasukan Setahun - Total Pengeluaran Setahun
+  $('rekapTotalIncome').textContent = rupiah(totalIncome);
+  $('rekapTotalExpense').textContent = rupiah(totalExpense);
+  $('rekapTotalBalance').textContent = rupiah(totalIncome - totalExpense);
+
+  const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+  let rekapHTML = '';
   
-  renderComparison(); renderBudgets(); renderBreakdown(data);
+  // Variabel untuk menyimpan saldo berjalan (dimulai dari 0)
+  let runningBalance = 0;
+
+  months.forEach(m => {
+    const monthStr = `${selectedYear}-${m}`;
+    const monthTrans = yearTransactions.filter(t => t.date.startsWith(monthStr));
+    const monthDate = new Date(selectedYear, parseInt(m) - 1, 1);
+    const monthName = monthDate.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { month: 'long' });
+
+    if (monthTrans.length > 0) {
+      const inc = monthTrans.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const exp = monthTrans.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      
+      // Tambahkan selisih bulan ini ke saldo berjalan
+      runningBalance += (inc - exp);
+
+      rekapHTML += `
+        <div class="rekap-month-card">
+          <div class="rekap-month-header"><span>${monthName}</span></div>
+          <div class="rekap-month-body">
+            <div class="rekap-row income"><span>${TRANSLATIONS[userLang].income}</span><span>+${rupiah(inc)}</span></div>
+            <div class="rekap-row expense"><span>${TRANSLATIONS[userLang].expense}</span><span>-${rupiah(exp)}</span></div>
+            <div class="rekap-row total"><span>Saldo Berjalan</span><span>${rupiah(runningBalance)}</span></div>
+          </div>
+        </div>
+      `;
+    }
+  });
+
+  if (!rekapHTML) rekapHTML = `<p class="empty">${TRANSLATIONS[userLang].no_rekap_data}</p>`;
+  $('rekapList').innerHTML = rekapHTML;
 }
 
 function renderComparison() {
