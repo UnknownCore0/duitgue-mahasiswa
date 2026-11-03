@@ -302,22 +302,30 @@ function getFiltered() {
 }
 
 function render() {
-  const data = getFiltered(); // Data yang sudah difilter per bulan
-  
-  // 1. Hitung Pemasukan & Pengeluaran (Hanya untuk bulan yang dipilih)
+  const data = getFiltered(); // Data bulan yang dipilih
+  const currentMonth = $('filterMonth').value; // Format: "YYYY-MM"
+
+  // 1. Pemasukan & Pengeluaran BULAN INI
   const income = data.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const expense = data.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  
-  // 2. Hitung Saldo Kumulatif (Dari SEMUA transaksi, bukan hanya bulan ini)
-  const totalIncomeAll = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const totalExpenseAll = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const cumulativeBalance = totalIncomeAll - totalExpenseAll;
 
-  // Tampilkan angka
+  // 2. Hitung Saldo Awal (dari semua transaksi SEBELUM bulan ini)
+  let openingBalance = 0;
+  if (currentMonth) {
+    const allBefore = transactions.filter(t => t.date < currentMonth + '-01');
+    const incBefore = allBefore.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const expBefore = allBefore.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    openingBalance = incBefore - expBefore;
+  }
+
+  // 3. Saldo Bulan Ini = Saldo Awal + (Pemasukan - Pengeluaran)
+  const currentBalance = openingBalance + (income - expense);
+
+  // Tampilkan
   $('income').textContent = rupiah(income); 
   $('expense').textContent = rupiah(expense);
-  $('balance').textContent = rupiah(cumulativeBalance); // Saldo pakai kumulatif
-  $('difference').textContent = rupiah(income - expense); // Selisih tetap bulan ini
+  $('balance').textContent = rupiah(currentBalance); // Saldo bulan ini
+  $('difference').textContent = rupiah(income - expense);
   
   $('empty').style.display = data.length ? 'none' : 'block';
   
