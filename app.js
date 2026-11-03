@@ -405,16 +405,10 @@ function renderRekap() {
   
   const yearTransactions = transactions.filter(t => t.date.startsWith(selectedYear)).sort((a, b) => a.date.localeCompare(b.date));
 
-  const totalIncome = yearTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const totalExpense = yearTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  
-  $('rekapTotalIncome').textContent = rupiah(totalIncome);
-  $('rekapTotalExpense').textContent = rupiah(totalExpense);
-  $('rekapTotalBalance').textContent = rupiah(totalIncome - totalExpense);
-
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
   let rekapHTML = '';
   let runningBalance = 0;
+  let totalSaldoKeseluruhan = 0;
 
   months.forEach(m => {
     const monthStr = `${selectedYear}-${m}`;
@@ -425,7 +419,9 @@ function renderRekap() {
     if (monthTrans.length > 0) {
       const inc = monthTrans.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
       const exp = monthTrans.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      
       runningBalance += (inc - exp);
+      totalSaldoKeseluruhan += runningBalance;
 
       rekapHTML += `
         <div class="rekap-month-card">
@@ -439,6 +435,13 @@ function renderRekap() {
       `;
     }
   });
+
+  $('rekapTotalBalance').textContent = rupiah(totalSaldoKeseluruhan);
+
+  const totalIncome = yearTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExpense = yearTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  $('rekapTotalIncome').textContent = rupiah(totalIncome);
+  $('rekapTotalExpense').textContent = rupiah(totalExpense);
 
   if (!rekapHTML) rekapHTML = `<p class="empty">${TRANSLATIONS[userLang].no_rekap_data}</p>`;
   $('rekapList').innerHTML = rekapHTML;
