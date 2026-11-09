@@ -144,8 +144,23 @@ input[type="date"], input[type="month"] {
 .amount { font-weight: 700; white-space: nowrap; font-size: .9rem; }
 .amount.income { color: var(--income); }
 .amount.expense { color: var(--expense); }
-.delete { background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--muted); padding: .25rem; }
-.delete:hover { color: var(--expense); }
+.item-actions {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.item-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--muted);
+  padding: 0.25rem;
+  transition: color 0.2s;
+}
+
+.item-actions .edit:hover { color: var(--primary); }
+.item-actions .delete:hover { color: var(--expense); }
 .empty { text-align: center; color: var(--muted); padding: 1.5rem 0; font-size: .9rem; }
 
 /* Chart */

@@ -30,6 +30,7 @@ let profile = loadData(PROFILE_KEY, { name: 'Halo, Mahasiswa!', photo: null });
 let debts = loadData(DEBT_KEY, []);
 let dreams = loadData(DREAM_KEY, []);
 let userLang = localStorage.getItem(LANG_KEY) || 'id';
+let editingTxId = null; // Variabel untuk fitur Edit
 
 const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
@@ -259,6 +260,7 @@ function updateSplitResult() {
   }
 }
 
+// ================= FORM SUBMIT (EDIT & SIMPAN) =================
 $('form').addEventListener('submit', e => {
   e.preventDefault();
   const amount = Number($('amount').value);
@@ -276,18 +278,14 @@ $('form').addEventListener('submit', e => {
 
   let rawCat = $('category').value;
   let standardCat = CAT_MAP[rawCat] || rawCat;
-
-  // Tentukan nominal yang akan dicatat di transaksi utama
   let finalAmount = amount;
-
-  if (isSplit && $('type').value === 'expense') {
+  
+  // HANYA jalankan Split Bill jika TIDAK sedang mode Edit
+  if (!editingTxId && isSplit && $('type').value === 'expense') {
     const perPerson = Math.round(amount / splitPeople);
     const totalFriendShare = amount - perPerson;
-
-    // 1. Catat hanya bagian kita saja ke transaksi utama
     finalAmount = perPerson;
 
-    // 2. Buat catatan hutang untuk teman-teman
     if (totalFriendShare > 0) {
       debts.push({
         id: crypto.randomUUID(),
@@ -302,35 +300,76 @@ $('form').addEventListener('submit', e => {
     }
   }
 
-  const newTx = {
-    id: crypto.randomUUID(),
-    type: $('type').value,
-    date: $('date').value,
-    desc: isSplit && $('type').value === 'expense' ? `${desc} (Split ${splitPeople} org)` : desc,
-    amount: finalAmount,
-    category: standardCat
-  };
-  transactions.push(newTx);
+  // --- PROSES EDIT vs TAMBAH BARU ---
+  if (editingTxId) {
+    const index = transactions.findIndex(t => t.id === editingTxId);
+    if (index > -1) {
+      const oldTx = transactions[index];
+      
+      // Jika yang diedit adalah tabungan, sinkronkan dengan menu Impian
+      if ((oldTx.category === 'Tabungan' || oldTx.category === 'Savings') && oldTx.amount !== finalAmount) {
+         let dreamName = oldTx.desc.replace(TRANSLATIONS.id.saving_desc, '').replace(TRANSLATIONS.en.saving_desc, '');
+         const dreamIndex = dreams.findIndex(d => d.name === dreamName);
+         if (dreamIndex > -1) {
+           dreams[dreamIndex].saved = Math.max(0, dreams[dreamIndex].saved - oldTx.amount + finalAmount);
+           localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+           renderDreams();
+         }
+      }
+      
+      // Update data
+      transactions[index] = {
+        ...oldTx,
+        type: $('type').value,
+        date: $('date').value,
+        desc: desc,
+        amount: finalAmount,
+        category: standardCat
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+    }
+  } else {
+    const newTx = {
+      id: crypto.randomUUID(),
+      type: $('type').value,
+      date: $('date').value,
+      desc: isSplit && $('type').value === 'expense' ? `${desc} (Split ${splitPeople} org)` : desc,
+      amount: finalAmount,
+      category: standardCat
+    };
+    transactions.push(newTx);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+  }
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-  
-  // Reset form
-  $('desc').value = '';
-  $('amount').value = '';
-  $('isSplitBill').checked = false;
-  $('splitPeople').value = 2; // Reset ke default
-  $('splitMyName').value = '';
-  $('splitBillInputs').classList.add('hidden');
-  $('splitResult').classList.add('hidden');
-
+  // Reset Form & UI
+  resetForm();
   updateStreak(); render(); renderRekap();
   
-  // Efek tombol simpan
-  const btn = e.target.querySelector('.btn');
+  const btn = $('saveBtn');
   btn.textContent = '✅ Tersimpan!'; btn.classList.add('saved');
   setTimeout(() => { btn.textContent = TRANSLATIONS[userLang].save_btn; btn.classList.remove('saved'); }, 1200);
 });
 
+// Fungsi Reset Form & Batal Edit
+$('cancelEditBtn').addEventListener('click', () => {
+  resetForm();
+});
+
+function resetForm() {
+  editingTxId = null;
+  $('form').reset();
+  $('date').value = getTodayString();
+  $('isSplitBill').checked = false;
+  $('splitBillInputs').classList.add('hidden');
+  $('splitResult').classList.add('hidden');
+  
+  fillCategories();
+  $('saveBtn').textContent = TRANSLATIONS[userLang].save_btn;
+  $('saveBtn').classList.remove('btn-primary'); 
+  $('cancelEditBtn').classList.add('hidden');
+}
+
+// ================= EXPORT CSV =================
 $('exportBtn').addEventListener('click', () => {
   if (transactions.length === 0) return alert('Belum ada data transaksi.');
   const headers = ['Tanggal', 'Jenis', 'Kategori', 'Keterangan', 'Jumlah (Rp)'];
@@ -343,6 +382,7 @@ $('exportBtn').addEventListener('click', () => {
   link.click();
 });
 
+// ================= BUDGET =================
 $('toggleBudgetBtn').addEventListener('click', () => $('budgetForm').classList.toggle('hidden'));
 $('budgetForm').addEventListener('submit', e => {
   e.preventDefault();
@@ -357,17 +397,44 @@ $('budgetForm').addEventListener('submit', e => {
   }
 });
 
+// ================= LIST EVENT (EDIT & HAPUS) =================
 let pendingDelete = null;
 const TOAST_DURATION = 5000;
 
 $('list').addEventListener('click', e => {
+  // --- FITUR EDIT TRANSAKSI ---
+  const editBtn = e.target.closest('.edit');
+  if (editBtn) {
+    const id = editBtn.getAttribute('data-id');
+    const tx = transactions.find(t => String(t.id) === String(id));
+    if (!tx) return;
+
+    editingTxId = tx.id;
+    $('type').value = tx.type;
+    $('desc').value = tx.desc;
+    $('amount').value = tx.amount;
+    $('date').value = tx.date;
+    
+    fillCategories(); 
+    const catToSelect = userLang === 'en' ? Object.keys(CAT_MAP).find(k => CAT_MAP[k] === tx.category) || tx.category : tx.category;
+    $('category').value = catToSelect;
+
+    $('saveBtn').textContent = '💾 Update Transaksi';
+    $('saveBtn').classList.add('btn-primary');
+    $('cancelEditBtn').classList.remove('hidden');
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return; 
+  }
+
+  // --- FITUR HAPUS TRANSAKSI ---
   const btn = e.target.closest('.delete'); if (!btn) return;
   const id = btn.getAttribute('data-id');
   const index = transactions.findIndex(t => String(t.id) === String(id));
   if (index === -1) return;
   const removed = transactions[index];
 
-  // --- 1. SINKRONISASI HAPUS TABUNGAN ---
+  // 1. SINKRONISASI HAPUS TABUNGAN
   let affectedDream = null;
   if (removed.category === 'Tabungan' || removed.category === 'Savings') {
     const prefixId = TRANSLATIONS.id.saving_desc;
@@ -387,24 +454,17 @@ $('list').addEventListener('click', e => {
     }
   }
 
-  // --- 2. SINKRONISASI HAPUS HUTANG (SPLIT BILL) ---
-  // Jika deskripsi mengandung kata '(Split', berarti ini transaksi split bill
+  // 2. SINKRONISASI HAPUS HUTANG (SPLIT BILL)
   let affectedDebtId = null;
   if (removed.desc.includes('(Split')) {
-    // Cari hutang yang deskripsinya cocok dengan keterangan transaksi ini
-    // (Menggunakan pencarian teks karena kita tidak menyimpan ID relasi khusus)
     const debtIndex = debts.findIndex(d => d.type === 'lend' && removed.desc.includes(d.name.split(' (Split')[0]));
-    
-    // Fallback: Jika tidak ketemu via nama, cari berdasarkan nominal piutang
     let targetIndex = debtIndex;
     if (targetIndex === -1) {
-      // Cari hutang yang belum lunas
       targetIndex = debts.findIndex(d => !d.isPaid && d.type === 'lend'); 
     }
 
     if (targetIndex > -1) {
       affectedDebtId = debts[targetIndex].id;
-      // Sembunyikan hutang sementara dari tampilan (simpan di memori)
       window._tempDebt = { index: targetIndex, data: debts[targetIndex] };
       debts.splice(targetIndex, 1);
       localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
@@ -424,7 +484,7 @@ $('list').addEventListener('click', e => {
   // Jika waktu habis (tidak klik Urungkan), hapus data hutang secara permanen
   pendingDelete = setTimeout(() => {
     toast.classList.remove('show');
-    window._tempDebt = null; // Bersihkan memori
+    window._tempDebt = null;
   }, TOAST_DURATION);
 
   // Logika tombol URUNGKAN (Undo)
@@ -432,23 +492,20 @@ $('list').addEventListener('click', e => {
     clearTimeout(pendingDelete); 
     toast.classList.remove('show');
     
-    // 1. Kembalikan Transaksi
     transactions.splice(index, 0, removed);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
 
-    // 2. Kembalikan Tabungan Impian
     if (affectedDream !== null) {
       dreams[affectedDream].saved += removed.amount;
       localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
       renderDreams();
     }
 
-    // 3. Kembalikan Hutang (jika ada)
     if (window._tempDebt) {
       debts.splice(window._tempDebt.index, 0, window._tempDebt.data);
       localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
       renderDebts();
-      window._tempDebt = null; // Bersihkan memori
+      window._tempDebt = null;
     }
 
     render(); renderRekap();
@@ -502,7 +559,10 @@ function render() {
       <span class="item-emoji">${emojiFor(displayCat)}</span>
       <div class="item-info"><strong>${escapeHTML(t.desc)}</strong><small>${escapeHTML(displayCat)} · ${formatDate(t.date)}</small></div>
       <span class="amount ${t.type}">${t.type === 'income' ? '+' : '-'}${rupiah(t.amount)}</span>
-      <button class="delete" data-id="${t.id}">🗑</button>
+      <div class="item-actions">
+        <button class="edit" data-id="${t.id}" aria-label="Edit">✏️</button>
+        <button class="delete" data-id="${t.id}" aria-label="Hapus">🗑</button>
+      </div>
     </li>`;
   }).join('');
 
@@ -579,7 +639,6 @@ function renderRekap() {
   let rekapHTML = '';
   let runningBalance = 0;
 
-  // Hitung saldo awal dari transaksi SEBELUM tahun yang dipilih
   let openingBalanceYear = 0;
   const transactionsBeforeYear = transactions.filter(t => t.date < `${selectedYear}-01-01`);
   if (transactionsBeforeYear.length > 0) {
@@ -588,7 +647,6 @@ function renderRekap() {
     openingBalanceYear = incBefore - expBefore;
   }
 
-  // Mulai running balance dengan saldo tahun lalu
   runningBalance = openingBalanceYear;
 
   months.forEach(m => {
@@ -601,7 +659,6 @@ function renderRekap() {
       const inc = monthTrans.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
       const exp = monthTrans.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
-      // Tambahkan selisih bulan ini ke saldo berjalan
       runningBalance += (inc - exp);
 
       rekapHTML += `
@@ -617,10 +674,8 @@ function renderRekap() {
     }
   });
 
-  // TOTAL SALDO di kotak atas diambil dari runningBalance paling akhir
   $('rekapTotalBalance').textContent = rupiah(runningBalance);
 
-  // Hitung total pemasukan & pengeluaran KHUSUS di tahun yang dipilih saja
   const totalIncome = yearTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const totalExpense = yearTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   
@@ -629,7 +684,6 @@ function renderRekap() {
 
   if (!rekapHTML) {
     rekapHTML = `<p class="empty">${TRANSLATIONS[userLang].no_rekap_data}</p>`;
-    // Jika tidak ada data di tahun tersebut, saldo tahun berjalan tetap menampilkan saldo dari tahun sebelumnya
     $('rekapTotalBalance').textContent = rupiah(openingBalanceYear);
   }
   
@@ -643,7 +697,7 @@ renderRekap();
 const originalUpdateStreak = updateStreak;
 updateStreak = function() { originalUpdateStreak(); initRekapYears(); };
 
-// ================= LOGIKA HUTANG (FASE 4) =================
+// ================= LOGIKA HUTANG =================
 function renderDebts() {
   const list = $('debtList');
   const empty = $('debtEmpty');
@@ -699,7 +753,7 @@ $('debtForm').addEventListener('submit', (e) => {
 
 renderDebts();
 
-// ================= LOGIKA IMPIAN (FASE 4) =================
+// ================= LOGIKA IMPIAN =================
 function renderDreams() {
   const list = $('dreamList');
   const empty = $('dreamEmpty');
@@ -743,11 +797,9 @@ window.addSaving = function(id) {
       const savedAmount = Number(amount);
       const dreamName = dreams[index].name;
 
-      // 1. Tambahkan ke progres impian
       dreams[index].saved += savedAmount;
       localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
 
-      // 2. Buat transaksi pengeluaran otomatis untuk mengurangi saldo
       const autoTransaction = {
         id: crypto.randomUUID(),
         type: 'expense',
@@ -759,7 +811,6 @@ window.addSaving = function(id) {
       transactions.push(autoTransaction);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
 
-      // 3. Update semua tampilan
       renderDreams();
       render();
       renderRekap();
