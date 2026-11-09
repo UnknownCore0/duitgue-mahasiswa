@@ -277,25 +277,22 @@ $('form').addEventListener('submit', e => {
   let rawCat = $('category').value;
   let standardCat = CAT_MAP[rawCat] || rawCat;
 
-  const newTx = {
-    id: crypto.randomUUID(),
-    type: $('type').value,
-    date: $('date').value,
-    desc,
-    amount,
-    category: standardCat
-  };
-  transactions.push(newTx);
+  // Tentukan nominal yang akan dicatat di transaksi utama
+  let finalAmount = amount;
 
   if (isSplit && $('type').value === 'expense') {
     const perPerson = Math.round(amount / splitPeople);
     const totalFriendShare = amount - perPerson;
 
+    // 1. Catat hanya bagian kita saja ke transaksi utama
+    finalAmount = perPerson;
+
+    // 2. Buat catatan hutang untuk teman-teman
     if (totalFriendShare > 0) {
       debts.push({
         id: crypto.randomUUID(),
         type: 'lend',
-        name: `${splitPeople - 1} Teman (Split Bill: ${desc})`,
+        name: `${splitPeople - 1} Teman (Split: ${desc})`,
         amount: totalFriendShare,
         desc: `Patungan dari ${myName}`,
         isPaid: false
@@ -305,14 +302,30 @@ $('form').addEventListener('submit', e => {
     }
   }
 
+  const newTx = {
+    id: crypto.randomUUID(),
+    type: $('type').value,
+    date: $('date').value,
+    desc: isSplit && $('type').value === 'expense' ? `${desc} (Split ${splitPeople} org)` : desc,
+    amount: finalAmount,
+    category: standardCat
+  };
+  transactions.push(newTx);
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+  
+  // Reset form
   $('desc').value = '';
   $('amount').value = '';
   $('isSplitBill').checked = false;
+  $('splitPeople').value = 2; // Reset ke default
+  $('splitMyName').value = '';
   $('splitBillInputs').classList.add('hidden');
   $('splitResult').classList.add('hidden');
 
   updateStreak(); render(); renderRekap();
+  
+  // Efek tombol simpan
   const btn = e.target.querySelector('.btn');
   btn.textContent = '✅ Tersimpan!'; btn.classList.add('saved');
   setTimeout(() => { btn.textContent = TRANSLATIONS[userLang].save_btn; btn.classList.remove('saved'); }, 1200);
