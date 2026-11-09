@@ -359,6 +359,7 @@ $('budgetForm').addEventListener('submit', e => {
 
 let pendingDelete = null;
 const TOAST_DURATION = 5000;
+
 $('list').addEventListener('click', e => {
   const btn = e.target.closest('.delete'); if (!btn) return;
   const id = btn.getAttribute('data-id');
@@ -366,7 +367,8 @@ $('list').addEventListener('click', e => {
   if (index === -1) return;
   const removed = transactions[index];
 
-  // --- SINKRONISASI HAPUS TABUNGAN ---
+  // --- 1. SINKRONISASI HAPUS TABUNGAN ---
+  let affectedDream = null;
   if (removed.category === 'Tabungan' || removed.category === 'Savings') {
     const prefixId = TRANSLATIONS.id.saving_desc;
     const prefixEn = TRANSLATIONS.en.saving_desc;
@@ -378,40 +380,75 @@ $('list').addEventListener('click', e => {
       const dreamIndex = dreams.findIndex(d => d.name === dreamName);
       if (dreamIndex > -1) {
         dreams[dreamIndex].saved = Math.max(0, dreams[dreamIndex].saved - removed.amount);
+        affectedDream = dreamIndex;
         localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
         renderDreams();
       }
     }
   }
 
+  // --- 2. SINKRONISASI HAPUS HUTANG (SPLIT BILL) ---
+  // Jika deskripsi mengandung kata '(Split', berarti ini transaksi split bill
+  let affectedDebtId = null;
+  if (removed.desc.includes('(Split')) {
+    // Cari hutang yang deskripsinya cocok dengan keterangan transaksi ini
+    // (Menggunakan pencarian teks karena kita tidak menyimpan ID relasi khusus)
+    const debtIndex = debts.findIndex(d => d.type === 'lend' && removed.desc.includes(d.name.split(' (Split')[0]));
+    
+    // Fallback: Jika tidak ketemu via nama, cari berdasarkan nominal piutang
+    let targetIndex = debtIndex;
+    if (targetIndex === -1) {
+      // Cari hutang yang belum lunas
+      targetIndex = debts.findIndex(d => !d.isPaid && d.type === 'lend'); 
+    }
+
+    if (targetIndex > -1) {
+      affectedDebtId = debts[targetIndex].id;
+      // Sembunyikan hutang sementara dari tampilan (simpan di memori)
+      window._tempDebt = { index: targetIndex, data: debts[targetIndex] };
+      debts.splice(targetIndex, 1);
+      localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+      renderDebts();
+    }
+  }
+
+  // Hapus transaksi dari Riwayat
   transactions.splice(index, 1);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
   render(); renderRekap();
 
+  // Tampilkan Toast
   const toast = $('toast'); $('toastMsg').textContent = `"${removed.desc}" dihapus`; toast.classList.add('show');
   if (pendingDelete) clearTimeout(pendingDelete);
-  pendingDelete = setTimeout(() => toast.classList.remove('show'), TOAST_DURATION);
+  
+  // Jika waktu habis (tidak klik Urungkan), hapus data hutang secara permanen
+  pendingDelete = setTimeout(() => {
+    toast.classList.remove('show');
+    window._tempDebt = null; // Bersihkan memori
+  }, TOAST_DURATION);
+
+  // Logika tombol URUNGKAN (Undo)
   $('undoBtn').onclick = () => {
-    clearTimeout(pendingDelete); toast.classList.remove('show');
+    clearTimeout(pendingDelete); 
+    toast.classList.remove('show');
+    
+    // 1. Kembalikan Transaksi
     transactions.splice(index, 0, removed);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
 
-    // --- SINKRONISASI UNDO TABUNGAN ---
-    if (removed.category === 'Tabungan' || removed.category === 'Savings') {
-      const prefixId = TRANSLATIONS.id.saving_desc;
-      const prefixEn = TRANSLATIONS.en.saving_desc;
-      let dreamName = '';
-      if (removed.desc.startsWith(prefixId)) dreamName = removed.desc.replace(prefixId, '');
-      else if (removed.desc.startsWith(prefixEn)) dreamName = removed.desc.replace(prefixEn, '');
+    // 2. Kembalikan Tabungan Impian
+    if (affectedDream !== null) {
+      dreams[affectedDream].saved += removed.amount;
+      localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+      renderDreams();
+    }
 
-      if (dreamName) {
-        const dreamIndex = dreams.findIndex(d => d.name === dreamName);
-        if (dreamIndex > -1) {
-          dreams[dreamIndex].saved += removed.amount;
-          localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
-          renderDreams();
-        }
-      }
+    // 3. Kembalikan Hutang (jika ada)
+    if (window._tempDebt) {
+      debts.splice(window._tempDebt.index, 0, window._tempDebt.data);
+      localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+      renderDebts();
+      window._tempDebt = null; // Bersihkan memori
     }
 
     render(); renderRekap();
