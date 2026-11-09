@@ -341,6 +341,25 @@ input[type="date"], input[type="month"] {
 @keyframes smoothBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 @keyframes smoothSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+/* Split Bill Toggle */
+.split-bill-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.split-bill-toggle input[type="checkbox"] {
+  width: 20px !important;
+  height: 20px !important;
+  cursor: pointer;
+}
+.split-bill-toggle label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* MEDIA QUERY MOBILE */
 @media (max-width: 520px) {
   .summary { grid-template-columns: 1fr 1fr; }

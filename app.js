@@ -13,18 +13,18 @@ const EMOJI = {
   'Makan': '🍔', 'Transport': '🚌', 'Kuliah': '📚', 'Hiburan': '🎮',
   'Kos & Tagihan': '🏠', 'Uang Saku': '💰', 'Beasiswa': '🎓',
   'Gaji / Part-time': '💼', 'Hadiah': '🎁', 'Lainnya': '✨', 'Tabungan': '🐷',
-  'Food': '🍔', 'College': '📚', 'Entertainment': '🎮', 'Rent & Bills': '🏠', 
+  'Food': '🍔', 'College': '📚', 'Entertainment': '🎮', 'Rent & Bills': '🏠',
   'Others': '✨', 'Allowance': '💰', 'Scholarship': '🎓', 'Salary / Part-time': '💼', 'Gift': '🎁', 'Savings': '🐷'
 };
 const emojiFor = cat => EMOJI[cat] || '✨';
 
 function loadData(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key)) || fallback; } 
+  try { return JSON.parse(localStorage.getItem(key)) || fallback; }
   catch { return fallback; }
 }
 
 let transactions = loadData(STORAGE_KEY, []);
-let budgets = loadData(BUDGET_KEY, {}); 
+let budgets = loadData(BUDGET_KEY, {});
 let streak = loadData(STREAK_KEY, { count: 0, lastDate: null });
 let profile = loadData(PROFILE_KEY, { name: 'Halo, Mahasiswa!', photo: null });
 let debts = loadData(DEBT_KEY, []);
@@ -37,8 +37,8 @@ function escapeHTML(str) { const div = document.createElement('div'); div.textCo
 
 function formatDate(iso) {
   const date = new Date(iso + 'T00:00:00');
-  return date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', { 
-    day: 'numeric', month: 'short', year: 'numeric' 
+  return date.toLocaleDateString(userLang === 'en' ? 'en-US' : 'id-ID', {
+    day: 'numeric', month: 'short', year: 'numeric'
   });
 }
 
@@ -69,10 +69,12 @@ const TRANSLATIONS = {
     debt_list: 'Daftar Hutang', no_debt: 'Belum ada catatan hutang.', mark_paid: 'Tandai Lunas', delete: 'Hapus',
     debt_name_placeholder: 'Nama Teman', debt_amount_placeholder: 'Jumlah (Rp)', debt_desc_placeholder: 'Keterangan (mis. Pinjam beli buku)',
     dream_desc: 'Targetkan barang impianmu.', add_dream: 'Tambah Impian Baru', dream_list: 'Daftar Impian',
-    no_dream: 'Belum ada impian yang ditargetkan.', dream_name_placeholder: 'Nama Impian (mis. Beli HP)', 
-    dream_target_placeholder: 'Target Harga (Rp)', add_saving: 'Tambah Tabungan', target: 'Target', 
+    no_dream: 'Belum ada impian yang ditargetkan.', dream_name_placeholder: 'Nama Impian (mis. Beli HP)',
+    dream_target_placeholder: 'Target Harga (Rp)', add_saving: 'Tambah Tabungan', target: 'Target',
     collected: 'Terkumpul', dream_achieved: '🎉 Target Tercapai!', delete_dream: 'Hapus',
-    saving_desc: 'Menabung untuk impian: '
+    saving_desc: 'Menabung untuk impian: ',
+    split_bill: 'Bagi Tagihan (Split Bill)', split_people: 'Jumlah Orang', split_my_name: 'Nama Kamu (Pembayar)',
+    split_result: 'Masing-masing bayar: '
   },
   en: {
     app_desc: 'Record your daily income and expenses easily.',
@@ -98,15 +100,17 @@ const TRANSLATIONS = {
     debt_list: 'Debt List', no_debt: 'No debt records yet.', mark_paid: 'Mark as Paid', delete: 'Delete',
     debt_name_placeholder: 'Friend\'s Name', debt_amount_placeholder: 'Amount (Rp)', debt_desc_placeholder: 'Description (e.g. Borrow for book)',
     dream_desc: 'Target your dream items.', add_dream: 'Add New Dream', dream_list: 'Dream List',
-    no_dream: 'No dreams targeted yet.', dream_name_placeholder: 'Dream Name (e.g. Buy Phone)', 
-    dream_target_placeholder: 'Target Price (Rp)', add_saving: 'Add Saving', target: 'Target', 
+    no_dream: 'No dreams targeted yet.', dream_name_placeholder: 'Dream Name (e.g. Buy Phone)',
+    dream_target_placeholder: 'Target Price (Rp)', add_saving: 'Add Saving', target: 'Target',
     collected: 'Collected', dream_achieved: '🎉 Target Achieved!', delete_dream: 'Delete',
-    saving_desc: 'Saving for dream: '
+    saving_desc: 'Saving for dream: ',
+    split_bill: 'Split Bill', split_people: 'Number of People', split_my_name: 'Your Name (Payer)',
+    split_result: 'Each pays: '
   }
 };
 
 const CAT_MAP = {
-  'Food': 'Makan', 'College': 'Kuliah', 'Entertainment': 'Hiburan', 'Rent & Bills': 'Kos & Tagihan', 
+  'Food': 'Makan', 'College': 'Kuliah', 'Entertainment': 'Hiburan', 'Rent & Bills': 'Kos & Tagihan',
   'Others': 'Lainnya', 'Allowance': 'Uang Saku', 'Scholarship': 'Beasiswa', 'Salary / Part-time': 'Gaji / Part-time', 'Gift': 'Hadiah',
   'Savings': 'Tabungan'
 };
@@ -114,7 +118,7 @@ const CAT_MAP = {
 function applyLanguage(lang) {
   userLang = lang;
   localStorage.setItem(LANG_KEY, lang);
-  
+
   document.querySelectorAll('[data-lang]').forEach(el => {
     const key = el.getAttribute('data-lang');
     if (TRANSLATIONS[lang][key]) {
@@ -122,10 +126,15 @@ function applyLanguage(lang) {
       else el.textContent = TRANSLATIONS[lang][key];
     }
   });
-  
+
   document.querySelectorAll('.btn-lang').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
   });
+
+  const splitLabel = document.querySelector('.split-bill-toggle label');
+  if (splitLabel) splitLabel.textContent = TRANSLATIONS[lang].split_bill;
+  if ($('splitPeople')) $('splitPeople').placeholder = TRANSLATIONS[lang].split_people;
+  if ($('splitMyName')) $('splitMyName').placeholder = TRANSLATIONS[lang].split_my_name;
 
   fillCategories(); fillFilterCategories(); fillBudgetCategories(); updateFormPlaceholders();
   updateRekapTitles();
@@ -160,7 +169,7 @@ function applyTheme(theme, color) {
   $('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
   localStorage.setItem(THEME_KEY, theme);
   localStorage.setItem(COLOR_KEY, color);
-  
+
   document.querySelectorAll('.color-opt').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-color') === color);
   });
@@ -195,7 +204,7 @@ function checkStreakValidity() {
 }
 function renderStreak() {
   const badge = $('streakBadge');
-  if (streak.count > 0) { $('streakCount').textContent = streak.count; badge.classList.remove('hidden'); } 
+  if (streak.count > 0) { $('streakCount').textContent = streak.count; badge.classList.remove('hidden'); }
   else { badge.classList.add('hidden'); }
 }
 checkStreakValidity();
@@ -222,18 +231,87 @@ const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset(
 const today = now.toISOString().slice(0, 10);
 $('date').value = today; $('filterMonth').value = today.slice(0, 7);
 
+// ================= LOGIKA SPLIT BILL =================
+$('isSplitBill').addEventListener('change', (e) => {
+  if (e.target.checked) {
+    $('splitBillInputs').classList.remove('hidden');
+    $('splitResult').classList.remove('hidden');
+    updateSplitResult();
+  } else {
+    $('splitBillInputs').classList.add('hidden');
+    $('splitResult').classList.add('hidden');
+  }
+});
+
+['amount', 'splitPeople', 'splitMyName'].forEach(id => {
+  $(id).addEventListener('input', updateSplitResult);
+});
+
+function updateSplitResult() {
+  const total = Number($('amount').value);
+  const people = Number($('splitPeople').value);
+
+  if (total > 0 && people >= 2) {
+    const perPerson = Math.round(total / people);
+    $('splitResult').textContent = `${TRANSLATIONS[userLang].split_result} ${rupiah(perPerson)}`;
+  } else {
+    $('splitResult').textContent = '';
+  }
+}
+
 $('form').addEventListener('submit', e => {
   e.preventDefault();
   const amount = Number($('amount').value);
   const desc = $('desc').value.trim();
   if (!desc || !Number.isFinite(amount) || amount <= 0) return;
-  
+
+  const isSplit = $('isSplitBill').checked;
+  const splitPeople = Number($('splitPeople').value);
+  const myName = $('splitMyName').value.trim() || 'Kamu';
+
+  if (isSplit && (splitPeople < 2 || !myName)) {
+    alert('Jumlah orang minimal 2 dan nama pembayar wajib diisi.');
+    return;
+  }
+
   let rawCat = $('category').value;
   let standardCat = CAT_MAP[rawCat] || rawCat;
 
-  transactions.push({ id: crypto.randomUUID(), type: $('type').value, date: $('date').value, desc, amount, category: standardCat });
+  const newTx = {
+    id: crypto.randomUUID(),
+    type: $('type').value,
+    date: $('date').value,
+    desc,
+    amount,
+    category: standardCat
+  };
+  transactions.push(newTx);
+
+  if (isSplit && $('type').value === 'expense') {
+    const perPerson = Math.round(amount / splitPeople);
+    const totalFriendShare = amount - perPerson;
+
+    if (totalFriendShare > 0) {
+      debts.push({
+        id: crypto.randomUUID(),
+        type: 'lend',
+        name: `${splitPeople - 1} Teman (Split Bill: ${desc})`,
+        amount: totalFriendShare,
+        desc: `Patungan dari ${myName}`,
+        isPaid: false
+      });
+      localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+      renderDebts();
+    }
+  }
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-  $('desc').value = ''; $('amount').value = '';
+  $('desc').value = '';
+  $('amount').value = '';
+  $('isSplitBill').checked = false;
+  $('splitBillInputs').classList.add('hidden');
+  $('splitResult').classList.add('hidden');
+
   updateStreak(); render(); renderRekap();
   const btn = e.target.querySelector('.btn');
   btn.textContent = '✅ Tersimpan!'; btn.classList.add('saved');
@@ -266,11 +344,11 @@ $('budgetForm').addEventListener('submit', e => {
   }
 });
 
-let pendingDelete = null; 
+let pendingDelete = null;
 const TOAST_DURATION = 5000;
 $('list').addEventListener('click', e => {
   const btn = e.target.closest('.delete'); if (!btn) return;
-  const id = btn.getAttribute('data-id'); 
+  const id = btn.getAttribute('data-id');
   const index = transactions.findIndex(t => String(t.id) === String(id));
   if (index === -1) return;
   const removed = transactions[index];
@@ -332,7 +410,7 @@ $('filterCategory').addEventListener('change', render);
 
 function getFiltered() {
   const month = $('filterMonth').value; const cat = $('filterCategory').value;
-  
+
   let standardCat = cat;
   if (cat !== 'all') {
     for (const [en, id] of Object.entries(CAT_MAP)) {
@@ -360,13 +438,13 @@ function render() {
 
   const currentBalance = openingBalance + (income - expense);
 
-  $('income').textContent = rupiah(income); 
+  $('income').textContent = rupiah(income);
   $('expense').textContent = rupiah(expense);
   $('balance').textContent = rupiah(currentBalance);
   $('difference').textContent = rupiah(income - expense);
-  
+
   $('empty').style.display = data.length ? 'none' : 'block';
-  
+
   $('list').innerHTML = data.map(t => {
     const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === t.category) || t.category : t.category;
     return `
@@ -377,7 +455,7 @@ function render() {
       <button class="delete" data-id="${t.id}">🗑</button>
     </li>`;
   }).join('');
-  
+
   renderComparison(); renderBudgets(); renderBreakdown(data);
 }
 
@@ -397,17 +475,17 @@ function renderComparison() {
 }
 
 function renderBudgets() {
-  const month = $('filterMonth').value; 
+  const month = $('filterMonth').value;
   const monthExpenses = transactions.filter(t => t.type === 'expense' && (!month || t.date.startsWith(month))).reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + t.amount; return acc; }, {});
   const budgetEntries = Object.entries(budgets);
   if (budgetEntries.length === 0) { $('budgetList').innerHTML = '<p class="empty" style="padding: .5rem 0; font-size:.85rem;">Belum ada budget.</p>'; return; }
-  
+
   $('budgetList').innerHTML = budgetEntries.map(([cat, limit]) => {
     const used = monthExpenses[cat] || 0; const pct = Math.min((used / limit) * 100, 100);
     let color = 'var(--success)', alertMsg = '';
-    if (pct >= 100) { color = 'var(--expense)'; alertMsg = `<div class="budget-alert" style="color:var(--expense)">⚠️ Budget habis!</div>`; } 
+    if (pct >= 100) { color = 'var(--expense)'; alertMsg = `<div class="budget-alert" style="color:var(--expense)">⚠️ Budget habis!</div>`; }
     else if (pct >= 75) { color = 'var(--warning)'; alertMsg = `<div class="budget-alert" style="color:var(--warning)">⚠️ Hampir habis</div>`; }
-    
+
     const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === cat) || cat : cat;
 
     return `<div class="budget-item"><div class="budget-info"><span class="budget-title">${emojiFor(displayCat)} ${escapeHTML(displayCat)}</span><span class="budget-numbers">${rupiah(used)} / ${rupiah(limit)}</span></div><div class="progress-track"><div class="progress-fill" style="width: ${pct}%; background: ${color};"></div></div>${alertMsg}</div>`;
@@ -420,13 +498,13 @@ function renderBreakdown(data) {
   const perCategory = {}; expenses.forEach(t => { perCategory[t.category] = (perCategory[t.category] || 0) + t.amount; });
   const entries = Object.entries(perCategory).sort((a, b) => b[1] - a[1]); const colors = ['#6366f1', '#a855f7', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4'];
   let acc = 0; const segments = entries.map(([, sum], i) => { const start = acc; acc += (sum / total) * 100; return `${colors[i % colors.length]} ${start}% ${acc}%`; }).join(', ');
-  
-  const legend = entries.map(([cat, sum], i) => { 
-    const pct = Math.round((sum / total) * 100); 
+
+  const legend = entries.map(([cat, sum], i) => {
+    const pct = Math.round((sum / total) * 100);
     const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === cat) || cat : cat;
-    return `<li class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span><span class="legend-name">${emojiFor(displayCat)} ${escapeHTML(displayCat)}</span><span class="legend-val">${rupiah(sum)} (${pct}%)</span></li>`; 
+    return `<li class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span><span class="legend-name">${emojiFor(displayCat)} ${escapeHTML(displayCat)}</span><span class="legend-val">${rupiah(sum)} (${pct}%)</span></li>`;
   }).join('');
-  
+
   $('breakdown').innerHTML = `<div class="donut-wrap"><div class="donut" style="background: conic-gradient(${segments})"><div class="donut-hole"><span>Total</span><strong>${rupiah(total)}</strong></div></div><ul class="legend">${legend}</ul></div>`;
 }
 
@@ -435,16 +513,16 @@ render();
 function initRekapYears() {
   const yearSelect = $('rekapYear');
   const currentYear = new Date().getFullYear();
-  let years = [...new Set(transactions.map(t => t.date.split('-')[0]))]; 
-  if (years.length === 0) years.push(currentYear.toString()); 
-  years.sort((a, b) => b - a); 
+  let years = [...new Set(transactions.map(t => t.date.split('-')[0]))];
+  if (years.length === 0) years.push(currentYear.toString());
+  years.sort((a, b) => b - a);
   yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
 }
 
 function renderRekap() {
   const selectedYear = $('rekapYear').value;
   if (!selectedYear) return;
-  
+
   const yearTransactions = transactions.filter(t => t.date.startsWith(selectedYear)).sort((a, b) => a.date.localeCompare(b.date));
 
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
@@ -461,7 +539,7 @@ function renderRekap() {
     if (monthTrans.length > 0) {
       const inc = monthTrans.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
       const exp = monthTrans.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-      
+
       runningBalance += (inc - exp);
       totalSaldoKeseluruhan += runningBalance;
 
@@ -561,12 +639,12 @@ function renderDreams() {
     return;
   }
   empty.style.display = 'none';
-  
+
   list.innerHTML = dreams.map(d => {
     const pct = Math.min((d.saved / d.target) * 100, 100);
     const isDone = d.saved >= d.target;
     const displayStatus = isDone ? `<div style="color: var(--success); font-weight:700; font-size:0.8rem; margin-top:0.3rem;">${TRANSLATIONS[userLang].dream_achieved}</div>` : '';
-    
+
     return `
       <div class="dream-card">
         <div class="dream-header"><span>${escapeHTML(d.name)}</span></div>
@@ -737,7 +815,7 @@ document.querySelectorAll('.btn-lang').forEach(btn => {
 
 document.getElementById('btn-dana-statement').addEventListener('click', () => {
   showPage('page-dana-statement');
-  setTimeout(() => { renderChart(); }, 50); 
+  setTimeout(() => { renderChart(); }, 50);
 });
 document.getElementById('backToProfileFromDana').addEventListener('click', () => showPage('page-profil'));
 
@@ -745,7 +823,7 @@ document.getElementById('btn-info').addEventListener('click', () => showPage('pa
 document.getElementById('backToProfile').addEventListener('click', () => showPage('page-profil'));
 document.getElementById('backToInfo').addEventListener('click', () => showPage('page-info-umum'));
 document.getElementById('btn-bantuan').addEventListener('click', () => {
-  const waNumber = '6281992053002'; 
+  const waNumber = '6281992053002';
   const waMessage = encodeURIComponent('Halo Admin Duit Gue, saya butuh bantuan terkait aplikasi.');
   window.open(`https://wa.me/${waNumber}?text=${waMessage}`, '_blank');
 });
@@ -754,7 +832,7 @@ document.getElementById('btn-privacy').addEventListener('click', () => showPage(
 function renderChart() {
   const chartContainer = document.getElementById('statChart');
   if (!chartContainer) return;
-  chartContainer.innerHTML = ''; 
+  chartContainer.innerHTML = '';
   const todayDate = new Date();
   const currentYear = todayDate.getFullYear();
   const currentMonth = todayDate.getMonth();
@@ -774,7 +852,7 @@ function renderChart() {
     const barInc = document.createElement('div');
     barInc.className = 'chart-bar income';
     const heightInc = data.inc > 0 ? (data.inc / maxVal) * 100 : 0;
-    barInc.style.height = `${Math.max(heightInc, 2)}%`; 
+    barInc.style.height = `${Math.max(heightInc, 2)}%`;
     if (data.inc > 0) barInc.title = `Pemasukan: ${rupiah(data.inc)}`;
     const barExp = document.createElement('div');
     barExp.className = 'chart-bar expense';
@@ -795,6 +873,6 @@ window.addEventListener('load', () => {
   if (loader) {
     setTimeout(() => {
       loader.classList.add('hidden');
-    }, 1000); 
+    }, 1000);
   }
 });
