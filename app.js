@@ -578,7 +578,18 @@ function renderRekap() {
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
   let rekapHTML = '';
   let runningBalance = 0;
-  let totalSaldoKeseluruhan = 0;
+
+  // Hitung saldo awal dari transaksi SEBELUM tahun yang dipilih
+  let openingBalanceYear = 0;
+  const transactionsBeforeYear = transactions.filter(t => t.date < `${selectedYear}-01-01`);
+  if (transactionsBeforeYear.length > 0) {
+    const incBefore = transactionsBeforeYear.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const expBefore = transactionsBeforeYear.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    openingBalanceYear = incBefore - expBefore;
+  }
+
+  // Mulai running balance dengan saldo tahun lalu
+  runningBalance = openingBalanceYear;
 
   months.forEach(m => {
     const monthStr = `${selectedYear}-${m}`;
@@ -590,8 +601,8 @@ function renderRekap() {
       const inc = monthTrans.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
       const exp = monthTrans.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
+      // Tambahkan selisih bulan ini ke saldo berjalan
       runningBalance += (inc - exp);
-      totalSaldoKeseluruhan += runningBalance;
 
       rekapHTML += `
         <div class="rekap-month-card">
@@ -606,14 +617,22 @@ function renderRekap() {
     }
   });
 
-  $('rekapTotalBalance').textContent = rupiah(totalSaldoKeseluruhan);
+  // TOTAL SALDO di kotak atas diambil dari runningBalance paling akhir
+  $('rekapTotalBalance').textContent = rupiah(runningBalance);
 
+  // Hitung total pemasukan & pengeluaran KHUSUS di tahun yang dipilih saja
   const totalIncome = yearTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const totalExpense = yearTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  
   $('rekapTotalIncome').textContent = rupiah(totalIncome);
   $('rekapTotalExpense').textContent = rupiah(totalExpense);
 
-  if (!rekapHTML) rekapHTML = `<p class="empty">${TRANSLATIONS[userLang].no_rekap_data}</p>`;
+  if (!rekapHTML) {
+    rekapHTML = `<p class="empty">${TRANSLATIONS[userLang].no_rekap_data}</p>`;
+    // Jika tidak ada data di tahun tersebut, saldo tahun berjalan tetap menampilkan saldo dari tahun sebelumnya
+    $('rekapTotalBalance').textContent = rupiah(openingBalanceYear);
+  }
+  
   $('rekapList').innerHTML = rekapHTML;
 }
 
