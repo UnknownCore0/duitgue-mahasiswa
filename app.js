@@ -12,9 +12,9 @@ const $ = id => document.getElementById(id);
 const EMOJI = {
   'Makan': '🍔', 'Transport': '🚌', 'Kuliah': '📚', 'Hiburan': '🎮',
   'Kos & Tagihan': '🏠', 'Uang Saku': '💰', 'Beasiswa': '🎓',
-  'Gaji / Part-time': '💼', 'Hadiah': '🎁', 'Lainnya': '✨',
+  'Gaji / Part-time': '💼', 'Hadiah': '🎁', 'Lainnya': '✨', 'Tabungan': '🐷',
   'Food': '🍔', 'College': '📚', 'Entertainment': '🎮', 'Rent & Bills': '🏠', 
-  'Others': '✨', 'Allowance': '💰', 'Scholarship': '🎓', 'Salary / Part-time': '💼', 'Gift': '🎁'
+  'Others': '✨', 'Allowance': '💰', 'Scholarship': '🎓', 'Salary / Part-time': '💼', 'Gift': '🎁', 'Savings': '🐷'
 };
 const emojiFor = cat => EMOJI[cat] || '✨';
 
@@ -60,7 +60,7 @@ const TRANSLATIONS = {
     help_center: 'Pusat Bantuan', help_desc: 'Hubungi admin via WhatsApp', privacy_notice: 'Privacy Notice', privacy_desc: 'Kebijakan privasi aplikasi',
     desc_placeholder_exp: 'Keterangan (mis. Makan siang)', desc_placeholder_inc: 'Keterangan (mis. Uang saku bulanan)', amount_placeholder: 'Jumlah (Rp)',
     all_cat: 'Semua kategori',
-    cat_expense: ['Makan', 'Transport', 'Kuliah', 'Hiburan', 'Kos & Tagihan', 'Lainnya'],
+    cat_expense: ['Makan', 'Transport', 'Kuliah', 'Hiburan', 'Kos & Tagihan', 'Tabungan', 'Lainnya'],
     cat_income: ['Uang Saku', 'Beasiswa', 'Gaji / Part-time', 'Hadiah', 'Lainnya'],
     rekap_title: '📊 Rekap Keuangan', rekap_desc: 'Lihat ringkasan dan evaluasi keuanganmu.',
     total_balance: 'Total Saldo', monthly_activity: 'Aktivitas Per Bulan', no_rekap_data: 'Belum ada data transaksi di tahun ini.',
@@ -71,7 +71,8 @@ const TRANSLATIONS = {
     dream_desc: 'Targetkan barang impianmu.', add_dream: 'Tambah Impian Baru', dream_list: 'Daftar Impian',
     no_dream: 'Belum ada impian yang ditargetkan.', dream_name_placeholder: 'Nama Impian (mis. Beli HP)', 
     dream_target_placeholder: 'Target Harga (Rp)', add_saving: 'Tambah Tabungan', target: 'Target', 
-    collected: 'Terkumpul', dream_achieved: '🎉 Target Tercapai!', delete_dream: 'Hapus'
+    collected: 'Terkumpul', dream_achieved: '🎉 Target Tercapai!', delete_dream: 'Hapus',
+    saving_desc: 'Menabung untuk impian: '
   },
   en: {
     app_desc: 'Record your daily income and expenses easily.',
@@ -88,7 +89,7 @@ const TRANSLATIONS = {
     help_center: 'Help Center', help_desc: 'Contact admin via WhatsApp', privacy_notice: 'Privacy Notice', privacy_desc: 'Application privacy policy',
     desc_placeholder_exp: 'Description (e.g. Lunch)', desc_placeholder_inc: 'Description (e.g. Monthly allowance)', amount_placeholder: 'Amount (Rp)',
     all_cat: 'All categories',
-    cat_expense: ['Food', 'Transport', 'College', 'Entertainment', 'Rent & Bills', 'Others'],
+    cat_expense: ['Food', 'Transport', 'College', 'Entertainment', 'Rent & Bills', 'Savings', 'Others'],
     cat_income: ['Allowance', 'Scholarship', 'Salary / Part-time', 'Gift', 'Others'],
     rekap_title: '📊 Financial Summary', rekap_desc: 'View your financial summary and evaluation.',
     total_balance: 'Total Balance', monthly_activity: 'Monthly Activity', no_rekap_data: 'No transaction data for this year.',
@@ -99,13 +100,15 @@ const TRANSLATIONS = {
     dream_desc: 'Target your dream items.', add_dream: 'Add New Dream', dream_list: 'Dream List',
     no_dream: 'No dreams targeted yet.', dream_name_placeholder: 'Dream Name (e.g. Buy Phone)', 
     dream_target_placeholder: 'Target Price (Rp)', add_saving: 'Add Saving', target: 'Target', 
-    collected: 'Collected', dream_achieved: '🎉 Target Achieved!', delete_dream: 'Delete'
+    collected: 'Collected', dream_achieved: '🎉 Target Achieved!', delete_dream: 'Delete',
+    saving_desc: 'Saving for dream: '
   }
 };
 
 const CAT_MAP = {
   'Food': 'Makan', 'College': 'Kuliah', 'Entertainment': 'Hiburan', 'Rent & Bills': 'Kos & Tagihan', 
-  'Others': 'Lainnya', 'Allowance': 'Uang Saku', 'Scholarship': 'Beasiswa', 'Salary / Part-time': 'Gaji / Part-time', 'Gift': 'Hadiah'
+  'Others': 'Lainnya', 'Allowance': 'Uang Saku', 'Scholarship': 'Beasiswa', 'Salary / Part-time': 'Gaji / Part-time', 'Gift': 'Hadiah',
+  'Savings': 'Tabungan'
 };
 
 function applyLanguage(lang) {
@@ -551,9 +554,29 @@ window.addSaving = function(id) {
   if (amount && !isNaN(amount) && Number(amount) > 0) {
     const index = dreams.findIndex(d => d.id === id);
     if (index > -1) {
-      dreams[index].saved += Number(amount);
+      const savedAmount = Number(amount);
+      const dreamName = dreams[index].name;
+
+      // 1. Tambahkan ke progres impian
+      dreams[index].saved += savedAmount;
       localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+
+      // 2. Buat transaksi pengeluaran otomatis untuk mengurangi saldo
+      const autoTransaction = {
+        id: crypto.randomUUID(),
+        type: 'expense',
+        date: getTodayString(),
+        desc: `${TRANSLATIONS[userLang].saving_desc}${dreamName}`,
+        amount: savedAmount,
+        category: 'Tabungan'
+      };
+      transactions.push(autoTransaction);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+
+      // 3. Update semua tampilan
       renderDreams();
+      render();
+      renderRekap();
     }
   }
 };
