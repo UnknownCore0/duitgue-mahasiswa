@@ -274,9 +274,29 @@ $('list').addEventListener('click', e => {
   const index = transactions.findIndex(t => String(t.id) === String(id));
   if (index === -1) return;
   const removed = transactions[index];
+
+  // --- SINKRONISASI HAPUS TABUNGAN ---
+  if (removed.category === 'Tabungan' || removed.category === 'Savings') {
+    const prefixId = TRANSLATIONS.id.saving_desc;
+    const prefixEn = TRANSLATIONS.en.saving_desc;
+    let dreamName = '';
+    if (removed.desc.startsWith(prefixId)) dreamName = removed.desc.replace(prefixId, '');
+    else if (removed.desc.startsWith(prefixEn)) dreamName = removed.desc.replace(prefixEn, '');
+
+    if (dreamName) {
+      const dreamIndex = dreams.findIndex(d => d.name === dreamName);
+      if (dreamIndex > -1) {
+        dreams[dreamIndex].saved = Math.max(0, dreams[dreamIndex].saved - removed.amount);
+        localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+        renderDreams();
+      }
+    }
+  }
+
   transactions.splice(index, 1);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
   render(); renderRekap();
+
   const toast = $('toast'); $('toastMsg').textContent = `"${removed.desc}" dihapus`; toast.classList.add('show');
   if (pendingDelete) clearTimeout(pendingDelete);
   pendingDelete = setTimeout(() => toast.classList.remove('show'), TOAST_DURATION);
@@ -284,6 +304,25 @@ $('list').addEventListener('click', e => {
     clearTimeout(pendingDelete); toast.classList.remove('show');
     transactions.splice(index, 0, removed);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+
+    // --- SINKRONISASI UNDO TABUNGAN ---
+    if (removed.category === 'Tabungan' || removed.category === 'Savings') {
+      const prefixId = TRANSLATIONS.id.saving_desc;
+      const prefixEn = TRANSLATIONS.en.saving_desc;
+      let dreamName = '';
+      if (removed.desc.startsWith(prefixId)) dreamName = removed.desc.replace(prefixId, '');
+      else if (removed.desc.startsWith(prefixEn)) dreamName = removed.desc.replace(prefixEn, '');
+
+      if (dreamName) {
+        const dreamIndex = dreams.findIndex(d => d.name === dreamName);
+        if (dreamIndex > -1) {
+          dreams[dreamIndex].saved += removed.amount;
+          localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+          renderDreams();
+        }
+      }
+    }
+
     render(); renderRekap();
   };
 });
