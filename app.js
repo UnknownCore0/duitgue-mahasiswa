@@ -7,6 +7,8 @@ const STREAK_KEY = 'streak-mahasiswa';
 const PROFILE_KEY = 'profile-mahasiswa';
 const DEBT_KEY = 'debt-mahasiswa';
 const DREAM_KEY = 'dream-mahasiswa';
+const CUSTOM_CAT_KEY = 'kategori-kustom-mahasiswa';
+const PIN_HASH_KEY = 'pin-keamanan';
 const $ = id => document.getElementById(id);
 
 const EMOJI = {
@@ -31,9 +33,8 @@ let debts = loadData(DEBT_KEY, []);
 let dreams = loadData(DREAM_KEY, []);
 let userLang = localStorage.getItem(LANG_KEY) || 'id';
 let editingTxId = null; 
-
-const CUSTOM_CAT_KEY = 'kategori-kustom-mahasiswa';
 let customCategories = loadData(CUSTOM_CAT_KEY, []); 
+let currentPinInput = ''; // Untuk menyimpan input PIN sementara
 
 const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
@@ -294,7 +295,6 @@ $('form').addEventListener('submit', e => {
   let standardCat = CAT_MAP[rawCat] || rawCat;
   let finalAmount = amount;
   
-  // HANYA jalankan Split Bill jika TIDAK sedang mode Edit
   if (!editingTxId && isSplit && $('type').value === 'expense') {
     const perPerson = Math.round(amount / splitPeople);
     const totalFriendShare = amount - perPerson;
@@ -314,13 +314,11 @@ $('form').addEventListener('submit', e => {
     }
   }
 
-  // --- PROSES EDIT vs TAMBAH BARU ---
   if (editingTxId) {
     const index = transactions.findIndex(t => t.id === editingTxId);
     if (index > -1) {
       const oldTx = transactions[index];
       
-      // Jika yang diedit adalah tabungan, sinkronkan dengan menu Impian
       if ((oldTx.category === 'Tabungan' || oldTx.category === 'Savings') && oldTx.amount !== finalAmount) {
          let dreamName = oldTx.desc.replace(TRANSLATIONS.id.saving_desc, '').replace(TRANSLATIONS.en.saving_desc, '');
          const dreamIndex = dreams.findIndex(d => d.name === dreamName);
@@ -331,7 +329,6 @@ $('form').addEventListener('submit', e => {
          }
       }
       
-      // Update data
       transactions[index] = {
         ...oldTx,
         type: $('type').value,
@@ -355,7 +352,6 @@ $('form').addEventListener('submit', e => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
   }
 
-  // Reset Form & UI
   resetForm();
   updateStreak(); render(); renderRekap();
   
@@ -364,7 +360,6 @@ $('form').addEventListener('submit', e => {
   setTimeout(() => { btn.textContent = TRANSLATIONS[userLang].save_btn; btn.classList.remove('saved'); }, 1200);
 });
 
-// Fungsi Reset Form & Batal Edit
 $('cancelEditBtn').addEventListener('click', () => {
   resetForm();
 });
@@ -417,7 +412,6 @@ let pendingDelete = null;
 const TOAST_DURATION = 5000;
 
 $('list').addEventListener('click', e => {
-  // --- FITUR EDIT TRANSAKSI ---
   const editBtn = e.target.closest('.edit');
   if (editBtn) {
     const id = editBtn.getAttribute('data-id');
@@ -442,14 +436,12 @@ $('list').addEventListener('click', e => {
     return; 
   }
 
-  // --- FITUR HAPUS TRANSAKSI ---
   const btn = e.target.closest('.delete'); if (!btn) return;
   const id = btn.getAttribute('data-id');
   const index = transactions.findIndex(t => String(t.id) === String(id));
   if (index === -1) return;
   const removed = transactions[index];
 
-  // 1. SINKRONISASI HAPUS TABUNGAN
   let affectedDream = null;
   if (removed.category === 'Tabungan' || removed.category === 'Savings') {
     const prefixId = TRANSLATIONS.id.saving_desc;
@@ -469,7 +461,6 @@ $('list').addEventListener('click', e => {
     }
   }
 
-  // 2. SINKRONISASI HAPUS HUTANG (SPLIT BILL)
   let affectedDebtId = null;
   if (removed.desc.includes('(Split')) {
     const debtIndex = debts.findIndex(d => d.type === 'lend' && removed.desc.includes(d.name.split(' (Split')[0]));
@@ -487,22 +478,18 @@ $('list').addEventListener('click', e => {
     }
   }
 
-  // Hapus transaksi dari Riwayat
   transactions.splice(index, 1);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
   render(); renderRekap();
 
-  // Tampilkan Toast
   const toast = $('toast'); $('toastMsg').textContent = `"${removed.desc}" dihapus`; toast.classList.add('show');
   if (pendingDelete) clearTimeout(pendingDelete);
   
-  // Jika waktu habis (tidak klik Urungkan), hapus data hutang secara permanen
   pendingDelete = setTimeout(() => {
     toast.classList.remove('show');
     window._tempDebt = null;
   }, TOAST_DURATION);
 
-  // Logika tombol URUNGKAN (Undo)
   $('undoBtn').onclick = () => {
     clearTimeout(pendingDelete); 
     toast.classList.remove('show');
@@ -925,6 +912,100 @@ $('categoryForm').addEventListener('submit', (e) => {
   fillCategories(); fillFilterCategories(); fillBudgetCategories();
 });
 
+// ================= LOGIKA KEAMANAN PIN =================
+async function hashPIN(pin) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function updatePinDots() {
+  const dots = document.querySelectorAll('#pinDots .dot');
+  dots.forEach((dot, index) => {
+    if (index < currentPinInput.length) dot.classList.add('filled');
+    else dot.classList.remove('filled');
+  });
+}
+
+function updatePinStatus() {
+  const savedPin = localStorage.getItem(PIN_HASH_KEY);
+  const pinStatusText = $('pinStatusText');
+  
+  if (savedPin) {
+    pinStatusText.textContent = "PIN Aktif (Klik untuk ubah/nonaktifkan)";
+  } else {
+    pinStatusText.textContent = "Aktifkan PIN aplikasi";
+  }
+}
+
+$('btn-security').addEventListener('click', async () => {
+  const savedPin = localStorage.getItem(PIN_HASH_KEY);
+  
+  if (!savedPin) {
+    const newPin = prompt('Buat PIN baru (4 angka):');
+    if (newPin && newPin.length === 4 && /^\d+$/.test(newPin)) {
+      const hash = await hashPIN(newPin);
+      localStorage.setItem(PIN_HASH_KEY, hash);
+      alert('PIN berhasil dibuat!');
+      updatePinStatus();
+    } else {
+      alert('PIN tidak valid. Harus 4 angka.');
+    }
+  } else {
+    const confirmPin = prompt('Masukkan PIN Anda saat ini untuk mematikan PIN:');
+    if (confirmPin) {
+      const hash = await hashPIN(confirmPin);
+      if (hash === savedPin) {
+        localStorage.removeItem(PIN_HASH_KEY);
+        alert('PIN dinonaktifkan.');
+        updatePinStatus();
+      } else {
+        alert('PIN salah!');
+      }
+    }
+  }
+});
+
+document.querySelectorAll('.key[data-val]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    if (currentPinInput.length < 4) {
+      currentPinInput += btn.getAttribute('data-val');
+      updatePinDots();
+      
+      if (currentPinInput.length === 4) {
+        const savedPin = localStorage.getItem(PIN_HASH_KEY);
+        const inputHash = await hashPIN(currentPinInput);
+        
+        if (inputHash === savedPin) {
+          $('lockScreen').classList.add('hidden');
+          currentPinInput = '';
+          updatePinDots();
+        } else {
+          $('lockError').textContent = 'PIN Salah. Coba lagi.';
+          currentPinInput = '';
+          setTimeout(() => { updatePinDots(); $('lockError').textContent = ''; }, 500);
+        }
+      }
+    }
+  });
+});
+
+$('keyDel').addEventListener('click', () => {
+  if (currentPinInput.length > 0) {
+    currentPinInput = currentPinInput.slice(0, -1);
+    updatePinDots();
+  }
+});
+
+$('forgotPinBtn').addEventListener('click', () => {
+  if (confirm('PERINGATAN: Mereset PIN akan menghapus SEMUA data keuangan Anda secara permanen. Lanjutkan?')) {
+    localStorage.clear();
+    window.location.reload();
+  }
+});
+
 // ================= NAVIGASI & PROFIL =================
 document.querySelectorAll('.nav-item').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -1082,6 +1163,17 @@ function renderChart() {
 
 // ================= HILANGKAN LOADING SCREEN =================
 window.addEventListener('load', () => {
+  // --- CEK PIN SAAT APLIKASI DIBUKA ---
+  const savedPin = localStorage.getItem(PIN_HASH_KEY);
+  if (savedPin) {
+    $('lockScreen').classList.remove('hidden');
+  } else {
+    $('lockScreen').classList.add('hidden');
+  }
+  
+  updatePinStatus(); // Update teks di menu profil
+
+  // --- HILANGKAN LOADING SCREEN ---
   const loader = document.getElementById('loadingScreen');
   if (loader) {
     setTimeout(() => {

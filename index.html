@@ -14,10 +14,36 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="./style.css?v=179">
+  <!-- Naikkan versi ini jika ada update CSS -->
+  <link rel="stylesheet" href="./style.css?v=180">
 </head>
 <body>
   
+  <!-- ================= LAYAR KUNCI (LOCK SCREEN) ================= -->
+  <div id="lockScreen" class="lock-screen hidden">
+    <div class="lock-icon">🔒</div>
+    <h2>Masukkan PIN</h2>
+    <p id="lockError" style="color: var(--expense); font-size: 0.85rem; height: 1.2rem; margin-bottom: 0.5rem;"></p>
+    <div class="pin-dots" id="pinDots">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    </div>
+    <div class="keypad" id="keypad">
+      <button class="key" data-val="1">1</button>
+      <button class="key" data-val="2">2</button>
+      <button class="key" data-val="3">3</button>
+      <button class="key" data-val="4">4</button>
+      <button class="key" data-val="5">5</button>
+      <button class="key" data-val="6">6</button>
+      <button class="key" data-val="7">7</button>
+      <button class="key" data-val="8">8</button>
+      <button class="key" data-val="9">9</button>
+      <button class="key key-empty"></button>
+      <button class="key" data-val="0">0</button>
+      <button class="key key-del" id="keyDel">⌫</button>
+    </div>
+    <button id="forgotPinBtn" class="btn-text" style="margin-top: 1rem; color: var(--muted); background: none; border: none; cursor: pointer; text-decoration: underline;">Lupa PIN? Reset Aplikasi</button>
+  </div>
+
   <!-- ================= LOADING SCREEN ================= -->
   <div id="loadingScreen">
     <div class="loader-icon">💸</div>
@@ -248,10 +274,16 @@
           <span class="menu-arrow">›</span>
         </button>
         
-        <!-- TOMBOL KATEGORI KUSTOM -->
         <button class="menu-item" id="btn-custom-category">
           <div class="menu-icon bg-orange">📁</div>
           <div class="menu-text"><strong>Kategori Kustom</strong><small>Tambah atau hapus kategori sendiri</small></div>
+          <span class="menu-arrow">›</span>
+        </button>
+
+        <!-- TOMBOL KEAMANAN PIN -->
+        <button class="menu-item" id="btn-security">
+          <div class="menu-icon bg-blue">🔐</div>
+          <div class="menu-text"><strong>Keamanan (PIN)</strong><small id="pinStatusText">Aktifkan PIN aplikasi</small></div>
           <span class="menu-arrow">›</span>
         </button>
 
@@ -465,7 +497,7 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=179"></script>
+  <script src="./app.js?v=180"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
