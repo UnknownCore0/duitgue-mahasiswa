@@ -34,7 +34,7 @@ let dreams = loadData(DREAM_KEY, []);
 let userLang = localStorage.getItem(LANG_KEY) || 'id';
 let editingTxId = null; 
 let customCategories = loadData(CUSTOM_CAT_KEY, []); 
-let currentPinInput = ''; // Untuk menyimpan input PIN sementara
+let currentPinInput = '';
 
 const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
@@ -1047,16 +1047,32 @@ photoInput.addEventListener('change', (e) => {
   }
 });
 
+// ================= BACKUP TERENKRIPSI =================
 document.getElementById('btn-backup').addEventListener('click', () => {
+  const password = prompt("Buat Password untuk mengenkripsi file backup ini (Wajib diingat!):");
+  if (!password) {
+    alert("Backup dibatalkan. Password diperlukan untuk mengamankan data.");
+    return;
+  }
+
   const dataToBackup = { transactions, budgets, streak, profile, debts, dreams, customCategories };
-  const dataStr = JSON.stringify(dataToBackup, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
+  const dataStr = JSON.stringify(dataToBackup);
+  
+  // Proses Enkripsi dengan AES
+  const encrypted = CryptoJS.AES.encrypt(dataStr, password).toString();
+  
+  const blob = new Blob([encrypted], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href = url; link.download = `DuitGue_Backup_${today}.json`; link.click();
+  link.href = url; 
+  link.download = `DuitGue_Backup_Terenskripsi_${today}.json`; 
+  link.click();
   URL.revokeObjectURL(url);
+  
+  alert("Backup berhasil diunduh dan diamankan dengan password!");
 });
 
+// ================= RESTORE TERENKRIPSI =================
 const restoreInput = document.getElementById('restoreInput');
 document.getElementById('btn-restore').addEventListener('click', () => { restoreInput.click(); });
 
@@ -1066,7 +1082,25 @@ restoreInput.addEventListener('change', (e) => {
     const reader = new FileReader();
     reader.onload = function(event) {
       try {
-        const parsedData = JSON.parse(event.target.result);
+        const encryptedData = event.target.result;
+        
+        // Minta password untuk dekripsi
+        const password = prompt("Masukkan password untuk membuka file backup ini:");
+        if (!password) {
+          alert("Restore dibatalkan.");
+          restoreInput.value = ''; // Reset input file
+          return;
+        }
+
+        // Proses Dekripsi
+        const decryptedBytes = CryptoJS.AES.decrypt(encryptedData, password);
+        const decryptedStr = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+        if (!decryptedStr) {
+          throw new Error("Password salah atau file korup.");
+        }
+
+        const parsedData = JSON.parse(decryptedStr);
         if (parsedData.transactions && parsedData.profile) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData.transactions));
           localStorage.setItem(BUDGET_KEY, JSON.stringify(parsedData.budgets || {}));
@@ -1075,9 +1109,15 @@ restoreInput.addEventListener('change', (e) => {
           localStorage.setItem(DEBT_KEY, JSON.stringify(parsedData.debts || []));
           localStorage.setItem(DREAM_KEY, JSON.stringify(parsedData.dreams || []));
           localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(parsedData.customCategories || []));
-          alert('Data berhasil dipulihkan! Halaman akan dimuat ulang.'); window.location.reload();
-        } else { alert('Format file backup tidak valid.'); }
-      } catch (err) { alert('Gagal membaca file. Pastikan file berekstensi .json dari aplikasi Duit Gue.'); }
+          alert('Data berhasil dipulihkan! Halaman akan dimuat ulang.'); 
+          window.location.reload();
+        } else { 
+          alert('Format file backup tidak valid.'); 
+        }
+      } catch (err) { 
+        alert('Gagal membuka file. Pastikan password benar dan file dari aplikasi Duit Gue.'); 
+        restoreInput.value = ''; // Reset input jika gagal
+      }
     };
     reader.readAsText(file);
   }
