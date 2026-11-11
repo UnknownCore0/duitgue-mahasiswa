@@ -730,7 +730,32 @@ function renderDebts() {
 
 window.markPaid = function(id) {
   const index = debts.findIndex(d => d.id === id);
-  if (index > -1) { debts[index].isPaid = true; localStorage.setItem(DEBT_KEY, JSON.stringify(debts)); renderDebts(); }
+  if (index > -1) {
+    const debt = debts[index];
+    
+    // 1. Ubah status hutang menjadi lunas
+    debt.isPaid = true;
+    
+    // 2. Buat transaksi otomatis agar saldo sinkron
+    const autoTx = {
+      id: crypto.randomUUID(),
+      type: debt.type === 'owe' ? 'expense' : 'income', // Jika kita berhutang = uang keluar. Jika orang berhutang = uang masuk.
+      date: getTodayString(),
+      desc: `Pelunasan Hutang: ${debt.name}`,
+      amount: debt.amount,
+      category: 'Lainnya' // Bisa diganti menjadi kategori kustom jika ada
+    };
+    
+    transactions.push(autoTx);
+    
+    // 3. Simpan ke LocalStorage dan perbarui tampilan
+    localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+    
+    renderDebts();
+    render(); // Memperbarui saldo di halaman Transaksi
+    renderRekap(); // Memperbarui rekap tahunan
+  }
 };
 
 window.deleteDebt = function(id) {
