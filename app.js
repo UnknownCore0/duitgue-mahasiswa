@@ -30,7 +30,10 @@ let profile = loadData(PROFILE_KEY, { name: 'Halo, Mahasiswa!', photo: null });
 let debts = loadData(DEBT_KEY, []);
 let dreams = loadData(DREAM_KEY, []);
 let userLang = localStorage.getItem(LANG_KEY) || 'id';
-let editingTxId = null; // Variabel untuk fitur Edit
+let editingTxId = null; 
+
+const CUSTOM_CAT_KEY = 'kategori-kustom-mahasiswa';
+let customCategories = loadData(CUSTOM_CAT_KEY, []); 
 
 const rupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
@@ -212,17 +215,28 @@ checkStreakValidity();
 
 function fillCategories() {
   const type = $('type').value;
-  const catList = TRANSLATIONS[userLang][type === 'expense' ? 'cat_expense' : 'cat_income'];
-  $('category').innerHTML = catList.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
+  const defaultCats = TRANSLATIONS[userLang][type === 'expense' ? 'cat_expense' : 'cat_income'];
+  const customCats = customCategories.filter(c => c.type === type).map(c => c.name);
+  const allCat = [...new Set([...defaultCats, ...customCats])];
+  
+  $('category').innerHTML = allCat.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
   updateFormPlaceholders();
 }
+
 function fillFilterCategories() {
-  const allCat = [...new Set([...TRANSLATIONS[userLang].cat_expense, ...TRANSLATIONS[userLang].cat_income])];
+  const defaultCats = [...new Set([...TRANSLATIONS[userLang].cat_expense, ...TRANSLATIONS[userLang].cat_income])];
+  const customCats = customCategories.map(c => c.name);
+  const allCat = [...new Set([...defaultCats, ...customCats])];
+  
   $('filterCategory').innerHTML = `<option value="all">${TRANSLATIONS[userLang].all_cat}</option>` + allCat.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
 }
+
 function fillBudgetCategories() {
-  const catList = TRANSLATIONS[userLang].cat_expense;
-  $('budgetCategory').innerHTML = catList.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
+  const defaultCats = TRANSLATIONS[userLang].cat_expense;
+  const customCats = customCategories.filter(c => c.type === 'expense').map(c => c.name);
+  const allCat = [...new Set([...defaultCats, ...customCats])];
+  
+  $('budgetCategory').innerHTML = allCat.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
 }
 
 $('type').addEventListener('change', fillCategories);
@@ -363,6 +377,7 @@ function resetForm() {
   $('splitBillInputs').classList.add('hidden');
   $('splitResult').classList.add('hidden');
   
+  $('type').value = 'expense';
   fillCategories();
   $('saveBtn').textContent = TRANSLATIONS[userLang].save_btn;
   $('saveBtn').classList.remove('btn-primary'); 
@@ -732,29 +747,22 @@ window.markPaid = function(id) {
   const index = debts.findIndex(d => d.id === id);
   if (index > -1) {
     const debt = debts[index];
-    
-    // 1. Ubah status hutang menjadi lunas
     debt.isPaid = true;
     
-    // 2. Buat transaksi otomatis agar saldo sinkron
     const autoTx = {
       id: crypto.randomUUID(),
-      type: debt.type === 'owe' ? 'expense' : 'income', // Jika kita berhutang = uang keluar. Jika orang berhutang = uang masuk.
+      type: debt.type === 'owe' ? 'expense' : 'income',
       date: getTodayString(),
       desc: `Pelunasan Hutang: ${debt.name}`,
       amount: debt.amount,
-      category: 'Lainnya' // Bisa diganti menjadi kategori kustom jika ada
+      category: 'Lainnya'
     };
     
     transactions.push(autoTx);
-    
-    // 3. Simpan ke LocalStorage dan perbarui tampilan
     localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
     
-    renderDebts();
-    render(); // Memperbarui saldo di halaman Transaksi
-    renderRekap(); // Memperbarui rekap tahunan
+    renderDebts(); render(); renderRekap();
   }
 };
 
@@ -836,9 +844,7 @@ window.addSaving = function(id) {
       transactions.push(autoTransaction);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
 
-      renderDreams();
-      render();
-      renderRekap();
+      renderDreams(); render(); renderRekap();
     }
   }
 };
@@ -863,6 +869,61 @@ $('dreamForm').addEventListener('submit', (e) => {
 });
 
 renderDreams();
+
+// ================= LOGIKA KATEGORI KUSTOM =================
+function renderCustomCategories() {
+  const list = $('customCategoryList');
+  const empty = $('categoryEmpty');
+  
+  if (customCategories.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  
+  empty.style.display = 'none';
+  list.innerHTML = customCategories.map(c => {
+    const icon = c.type === 'expense' ? '🔴' : '🟢';
+    const typeText = c.type === 'expense' ? 'Pengeluaran' : 'Pemasukan';
+    return `
+      <li class="item">
+        <div class="item-info">
+          <strong>${icon} ${escapeHTML(c.name)}</strong>
+          <small>${typeText}</small>
+        </div>
+        <button class="delete" onclick="deleteCustomCategory('${c.id}')">🗑</button>
+      </li>
+    `;
+  }).join('');
+}
+
+window.deleteCustomCategory = function(id) {
+  if (confirm('Hapus kategori ini? (Transaksi yang sudah ada tidak akan terhapus)')) {
+    customCategories = customCategories.filter(c => c.id !== id);
+    localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(customCategories));
+    renderCustomCategories();
+    fillCategories(); fillFilterCategories(); fillBudgetCategories();
+  }
+};
+
+$('categoryForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = $('newCatName').value.trim();
+  const type = $('newCatType').value;
+  if (!name) return;
+  
+  if (customCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    alert('Kategori dengan nama tersebut sudah ada!');
+    return;
+  }
+  
+  customCategories.push({ id: crypto.randomUUID(), name: name, type: type });
+  localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(customCategories));
+  
+  $('newCatName').value = '';
+  renderCustomCategories();
+  fillCategories(); fillFilterCategories(); fillBudgetCategories();
+});
 
 // ================= NAVIGASI & PROFIL =================
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -906,7 +967,7 @@ photoInput.addEventListener('change', (e) => {
 });
 
 document.getElementById('btn-backup').addEventListener('click', () => {
-  const dataToBackup = { transactions, budgets, streak, profile, debts, dreams };
+  const dataToBackup = { transactions, budgets, streak, profile, debts, dreams, customCategories };
   const dataStr = JSON.stringify(dataToBackup, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -932,6 +993,7 @@ restoreInput.addEventListener('change', (e) => {
           localStorage.setItem(PROFILE_KEY, JSON.stringify(parsedData.profile));
           localStorage.setItem(DEBT_KEY, JSON.stringify(parsedData.debts || []));
           localStorage.setItem(DREAM_KEY, JSON.stringify(parsedData.dreams || []));
+          localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(parsedData.customCategories || []));
           alert('Data berhasil dipulihkan! Halaman akan dimuat ulang.'); window.location.reload();
         } else { alert('Format file backup tidak valid.'); }
       } catch (err) { alert('Gagal membaca file. Pastikan file berekstensi .json dari aplikasi Duit Gue.'); }
@@ -957,6 +1019,12 @@ document.getElementById('backToProfileFromLang').addEventListener('click', () =>
 document.querySelectorAll('.btn-lang').forEach(btn => {
   btn.addEventListener('click', () => applyLanguage(btn.getAttribute('data-lang')));
 });
+
+document.getElementById('btn-custom-category').addEventListener('click', () => {
+  showPage('page-custom-category');
+  renderCustomCategories();
+});
+document.getElementById('backToProfileFromCategory').addEventListener('click', () => showPage('page-profil'));
 
 document.getElementById('btn-dana-statement').addEventListener('click', () => {
   showPage('page-dana-statement');

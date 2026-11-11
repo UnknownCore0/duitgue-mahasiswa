@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="./style.css?v=178">
+  <link rel="stylesheet" href="./style.css?v=179">
 </head>
 <body>
   
@@ -247,6 +247,14 @@
           <div class="menu-text"><strong data-lang="language">Bahasa</strong><small data-lang="language_desc">Ganti bahasa aplikasi</small></div>
           <span class="menu-arrow">›</span>
         </button>
+        
+        <!-- TOMBOL KATEGORI KUSTOM -->
+        <button class="menu-item" id="btn-custom-category">
+          <div class="menu-icon bg-orange">📁</div>
+          <div class="menu-text"><strong>Kategori Kustom</strong><small>Tambah atau hapus kategori sendiri</small></div>
+          <span class="menu-arrow">›</span>
+        </button>
+
         <div class="divider"></div>
         <button class="menu-item" id="btn-backup">
           <div class="menu-icon bg-green">💾</div>
@@ -295,6 +303,36 @@
           <button class="btn-small btn-lang" data-lang="id" style="padding: 1rem;">🇮🇩 Indonesia</button>
           <button class="btn-small btn-lang" data-lang="en" style="padding: 1rem;">🇬🇧 English</button>
         </div>
+      </div>
+    </section>
+
+    <!-- HALAMAN KATEGORI KUSTOM -->
+    <section id="page-custom-category" class="page hidden">
+      <header class="sub-header">
+        <button class="back-btn" id="backToProfileFromCategory">‹</button>
+        <h2>📁 Kategori Kustom</h2>
+      </header>
+
+      <!-- Form Tambah Kategori -->
+      <div class="panel">
+        <h3 style="font-size: 1rem; margin-bottom: 1rem;">Tambah Kategori Baru</h3>
+        <form id="categoryForm">
+          <div class="row">
+            <input type="text" id="newCatName" placeholder="Nama Kategori (mis. Uang Kas)" required maxlength="20">
+            <select id="newCatType">
+              <option value="expense">Pengeluaran</option>
+              <option value="income">Pemasukan</option>
+            </select>
+          </div>
+          <button type="submit" class="btn">Simpan Kategori</button>
+        </form>
+      </div>
+
+      <!-- Daftar Kategori Kustom -->
+      <div class="panel">
+        <h3 style="font-size: 1rem; margin-bottom: 1rem;">Daftar Kategori Anda</h3>
+        <ul id="customCategoryList" class="list" style="max-height: none;"></ul>
+        <p id="categoryEmpty" class="empty" style="display: none;">Belum ada kategori kustom.</p>
       </div>
     </section>
 
@@ -427,7 +465,7 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=178"></script>
+  <script src="./app.js?v=179"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

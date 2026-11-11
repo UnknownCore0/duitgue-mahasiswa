@@ -14,7 +14,6 @@
   --nav-height: 70px;
 }
 
-
 [data-theme="dark"] {
   --bg: #0f172a;
   --card: #1e293b;
@@ -328,6 +327,20 @@ input[type="date"], input[type="month"] {
 .dream-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 .btn-add-save { background: var(--primary); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; flex: 1; }
 .btn-delete-dream { background: var(--expense); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+
+/* STYLING KATEGORI KUSTOM */
+#customCategoryList .item {
+  justify-content: space-between;
+}
+#customCategoryList .item-info {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+#customCategoryList .delete {
+  background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--muted); padding: 0.25rem;
+}
+#customCategoryList .delete:hover { color: var(--expense); }
 
 /* SCROLL KHUSUS UNTUK DAFTAR RIWAYAT */
 #list {
