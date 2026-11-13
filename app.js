@@ -18,7 +18,12 @@ const EMOJI = {
   'Food': '🍔', 'College': '📚', 'Entertainment': '🎮', 'Rent & Bills': '🏠',
   'Others': '✨', 'Allowance': '💰', 'Scholarship': '🎓', 'Salary / Part-time': '💼', 'Gift': '🎁', 'Savings': '🐷'
 };
-const emojiFor = cat => EMOJI[cat] || '✨';
+// Fungsi untuk mengambil emoji (prioritaskan dari kategori kustom)
+function getEmoji(cat) {
+  const custom = customCategories.find(c => c.name === cat);
+  if (custom && custom.icon) return custom.icon;
+  return EMOJI[cat] || '✨';
+}
 
 function loadData(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) || fallback; }
@@ -222,7 +227,7 @@ function fillCategories() {
   const customCats = customCategories.filter(c => c.type === type).map(c => c.name);
   const allCat = [...new Set([...defaultCats, ...customCats])];
   
-  $('category').innerHTML = allCat.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
+  $('category').innerHTML = allCat.map(c => `<option value="${escapeHTML(c)}">${getEmoji(c)} ${escapeHTML(c)}</option>`).join('');
   updateFormPlaceholders();
 }
 
@@ -231,7 +236,7 @@ function fillFilterCategories() {
   const customCats = customCategories.map(c => c.name);
   const allCat = [...new Set([...defaultCats, ...customCats])];
   
-  $('filterCategory').innerHTML = `<option value="all">${TRANSLATIONS[userLang].all_cat}</option>` + allCat.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
+  $('filterCategory').innerHTML = `<option value="all">${TRANSLATIONS[userLang].all_cat}</option>` + allCat.map(c => `<option value="${escapeHTML(c)}">${getEmoji(c)} ${escapeHTML(c)}</option>`).join('');
 }
 
 function fillBudgetCategories() {
@@ -239,7 +244,7 @@ function fillBudgetCategories() {
   const customCats = customCategories.filter(c => c.type === 'expense').map(c => c.name);
   const allCat = [...new Set([...defaultCats, ...customCats])];
   
-  $('budgetCategory').innerHTML = allCat.map(c => `<option value="${escapeHTML(c)}">${emojiFor(c)} ${escapeHTML(c)}</option>`).join('');
+  $('budgetCategory').innerHTML = allCat.map(c => `<option value="${escapeHTML(c)}">${getEmoji(c)} ${escapeHTML(c)}</option>`).join('');
 }
 
 $('type').addEventListener('change', fillCategories);
@@ -560,7 +565,7 @@ function render() {
     const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === t.category) || t.category : t.category;
     return `
     <li class="item" data-id="${t.id}">
-      <span class="item-emoji">${emojiFor(displayCat)}</span>
+      <span class="item-emoji">${getEmoji(displayCat)}</span>
       <div class="item-info"><strong>${escapeHTML(t.desc)}</strong><small>${escapeHTML(displayCat)} · ${formatDate(t.date)}</small></div>
       <span class="amount ${t.type}">${t.type === 'income' ? '+' : '-'}${rupiah(t.amount)}</span>
       <div class="item-actions">
@@ -602,7 +607,7 @@ function renderBudgets() {
 
     const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === cat) || cat : cat;
 
-    return `<div class="budget-item"><div class="budget-info"><span class="budget-title">${emojiFor(displayCat)} ${escapeHTML(displayCat)}</span><span class="budget-numbers">${rupiah(used)} / ${rupiah(limit)}</span></div><div class="progress-track"><div class="progress-fill" style="width: ${pct}%; background: ${color};"></div></div>${alertMsg}</div>`;
+    return `<div class="budget-item"><div class="budget-info"><span class="budget-title">${getEmoji(displayCat)} ${escapeHTML(displayCat)}</span><span class="budget-numbers">${rupiah(used)} / ${rupiah(limit)}</span></div><div class="progress-track"><div class="progress-fill" style="width: ${pct}%; background: ${color};"></div></div>${alertMsg}</div>`;
   }).join('');
 }
 
@@ -616,7 +621,7 @@ function renderBreakdown(data) {
   const legend = entries.map(([cat, sum], i) => {
     const pct = Math.round((sum / total) * 100);
     const displayCat = userLang === 'en' ? Object.keys(CAT_MAP).find(key => CAT_MAP[key] === cat) || cat : cat;
-    return `<li class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span><span class="legend-name">${emojiFor(displayCat)} ${escapeHTML(displayCat)}</span><span class="legend-val">${rupiah(sum)} (${pct}%)</span></li>`;
+    return `<li class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span><span class="legend-name">${getEmoji(displayCat)} ${escapeHTML(displayCat)}</span><span class="legend-val">${rupiah(sum)} (${pct}%)</span></li>`;
   }).join('');
 
   $('breakdown').innerHTML = `<div class="donut-wrap"><div class="donut" style="background: conic-gradient(${segments})"><div class="donut-hole"><span>Total</span><strong>${rupiah(total)}</strong></div></div><ul class="legend">${legend}</ul></div>`;
@@ -945,7 +950,7 @@ function renderCustomCategories() {
   
   empty.style.display = 'none';
   list.innerHTML = customCategories.map(c => {
-    const icon = c.type === 'expense' ? '🔴' : '🟢';
+    const icon = c.icon || (c.type === 'expense' ? '🔴' : '🟢');
     const typeText = c.type === 'expense' ? 'Pengeluaran' : 'Pemasukan';
     return `
       <li class="item">
@@ -972,6 +977,7 @@ $('categoryForm').addEventListener('submit', (e) => {
   e.preventDefault();
   const name = $('newCatName').value.trim();
   const type = $('newCatType').value;
+  const icon = $('newCatIcon').value;
   if (!name) return;
   
   if (customCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
@@ -979,7 +985,7 @@ $('categoryForm').addEventListener('submit', (e) => {
     return;
   }
   
-  customCategories.push({ id: crypto.randomUUID(), name: name, type: type });
+  customCategories.push({ id: crypto.randomUUID(), name: name, type: type, icon: icon });
   localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(customCategories));
   
   $('newCatName').value = '';
@@ -1133,7 +1139,6 @@ document.getElementById('btn-backup').addEventListener('click', () => {
   const dataToBackup = { transactions, budgets, streak, profile, debts, dreams, customCategories };
   const dataStr = JSON.stringify(dataToBackup);
   
-  // Proses Enkripsi dengan AES
   const encrypted = CryptoJS.AES.encrypt(dataStr, password).toString();
   
   const blob = new Blob([encrypted], { type: 'application/json' });
@@ -1159,15 +1164,13 @@ restoreInput.addEventListener('change', (e) => {
       try {
         const encryptedData = event.target.result;
         
-        // Minta password untuk dekripsi
         const password = prompt("Masukkan password untuk membuka file backup ini:");
         if (!password) {
           alert("Restore dibatalkan.");
-          restoreInput.value = ''; // Reset input file
+          restoreInput.value = '';
           return;
         }
 
-        // Proses Dekripsi
         const decryptedBytes = CryptoJS.AES.decrypt(encryptedData, password);
         const decryptedStr = decryptedBytes.toString(CryptoJS.enc.Utf8);
 
@@ -1191,7 +1194,7 @@ restoreInput.addEventListener('change', (e) => {
         }
       } catch (err) { 
         alert('Gagal membuka file. Pastikan password benar dan file dari aplikasi Duit Gue.'); 
-        restoreInput.value = ''; // Reset input jika gagal
+        restoreInput.value = '';
       }
     };
     reader.readAsText(file);
