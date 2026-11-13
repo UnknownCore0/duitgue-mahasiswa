@@ -33,6 +33,8 @@ let debts = loadData(DEBT_KEY, []);
 let dreams = loadData(DREAM_KEY, []);
 let userLang = localStorage.getItem(LANG_KEY) || 'id';
 let editingTxId = null; 
+let editingDebtId = null;
+let editingDreamId = null;
 let customCategories = loadData(CUSTOM_CAT_KEY, []); 
 let currentPinInput = '';
 
@@ -719,16 +721,35 @@ function renderDebts() {
     const statusClass = isOwe ? 'owe' : 'lend';
     const paidClass = d.isPaid ? 'paid' : '';
     const btnPaid = d.isPaid ? '' : `<button class="btn-paid" onclick="markPaid('${d.id}')">${TRANSLATIONS[userLang].mark_paid}</button>`;
+    const btnEdit = d.isPaid ? '' : `<button class="btn-edit-debt" onclick="editDebt('${d.id}')" style="background:var(--primary); color:white; border:none; padding:0.4rem 0.8rem; border-radius:6px; font-size:0.8rem; cursor:pointer;">✏️ Edit</button>`;
+    
     return `
       <div class="debt-card ${paidClass}">
         <div class="debt-header ${statusClass}"><span>${escapeHTML(d.name)}</span><span>${statusText}</span></div>
         <div class="debt-amount">${rupiah(d.amount)}</div>
         ${d.desc ? `<div class="debt-desc">${escapeHTML(d.desc)}</div>` : ''}
-        <div class="debt-actions">${btnPaid}<button class="btn-delete-debt" onclick="deleteDebt('${d.id}')">${TRANSLATIONS[userLang].delete}</button></div>
+        <div class="debt-actions">${btnPaid}${btnEdit}<button class="btn-delete-debt" onclick="deleteDebt('${d.id}')">${TRANSLATIONS[userLang].delete}</button></div>
       </div>`;
   }).join('');
   $('totalIOwe').textContent = rupiah(totalOwe); $('totalOweMe').textContent = rupiah(totalLend);
 }
+
+window.editDebt = function(id) {
+  const debt = debts.find(d => d.id === id);
+  if (!debt) return;
+
+  editingDebtId = debt.id;
+  $('debtType').value = debt.type;
+  $('debtName').value = debt.name;
+  $('debtAmount').value = debt.amount;
+  $('debtDesc').value = debt.desc;
+
+  const btn = $('debtForm').querySelector('.btn');
+  btn.textContent = '💾 Update Catatan';
+  btn.classList.add('btn-primary');
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
 window.markPaid = function(id) {
   const index = debts.findIndex(d => d.id === id);
@@ -765,8 +786,28 @@ $('debtForm').addEventListener('submit', (e) => {
   const amount = Number($('debtAmount').value);
   const desc = $('debtDesc').value.trim();
   if (!name || amount <= 0) return;
-  debts.push({ id: crypto.randomUUID(), type: $('debtType').value, name, amount, desc, isPaid: false });
-  localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+
+  if (editingDebtId) {
+    const index = debts.findIndex(d => d.id === editingDebtId);
+    if (index > -1) {
+      debts[index] = {
+        ...debts[index],
+        type: $('debtType').value,
+        name: name,
+        amount: amount,
+        desc: desc
+      };
+      localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+    }
+    editingDebtId = null;
+    const btn = $('debtForm').querySelector('.btn');
+    btn.textContent = TRANSLATIONS[userLang].save_btn;
+    btn.classList.remove('btn-primary');
+  } else {
+    debts.push({ id: crypto.randomUUID(), type: $('debtType').value, name, amount, desc, isPaid: false });
+    localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+  }
+
   $('debtName').value = ''; $('debtAmount').value = ''; $('debtDesc').value = '';
   renderDebts();
 });
@@ -802,6 +843,7 @@ function renderDreams() {
         ${displayStatus}
         <div class="dream-actions">
           ${!isDone ? `<button class="btn-add-save" onclick="addSaving('${d.id}')">+ ${TRANSLATIONS[userLang].add_saving}</button>` : ''}
+          <button class="btn-edit-dream" onclick="editDream('${d.id}')" style="background:var(--primary); color:white; border:none; padding:0.4rem 0.8rem; border-radius:6px; font-size:0.8rem; cursor:pointer;">✏️ Edit</button>
           <button class="btn-delete-dream" onclick="deleteDream('${d.id}')">${TRANSLATIONS[userLang].delete_dream}</button>
         </div>
       </div>
@@ -836,6 +878,21 @@ window.addSaving = function(id) {
   }
 };
 
+window.editDream = function(id) {
+  const dream = dreams.find(d => d.id === id);
+  if (!dream) return;
+
+  editingDreamId = dream.id;
+  $('dreamName').value = dream.name;
+  $('dreamTarget').value = dream.target;
+
+  const btn = $('dreamForm').querySelector('.btn');
+  btn.textContent = '💾 Update Impian';
+  btn.classList.add('btn-primary');
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 window.deleteDream = function(id) {
   if (confirm(userLang === 'en' ? 'Delete this dream?' : 'Hapus impian ini?')) {
     dreams = dreams.filter(d => d.id !== id);
@@ -849,8 +906,26 @@ $('dreamForm').addEventListener('submit', (e) => {
   const name = $('dreamName').value.trim();
   const target = Number($('dreamTarget').value);
   if (!name || target <= 0) return;
-  dreams.push({ id: crypto.randomUUID(), name, target, saved: 0 });
-  localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+
+  if (editingDreamId) {
+    const index = dreams.findIndex(d => d.id === editingDreamId);
+    if (index > -1) {
+      dreams[index] = {
+        ...dreams[index],
+        name: name,
+        target: target
+      };
+      localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+    }
+    editingDreamId = null;
+    const btn = $('dreamForm').querySelector('.btn');
+    btn.textContent = TRANSLATIONS[userLang].save_btn;
+    btn.classList.remove('btn-primary');
+  } else {
+    dreams.push({ id: crypto.randomUUID(), name, target, saved: 0 });
+    localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+  }
+
   $('dreamName').value = ''; $('dreamTarget').value = '';
   renderDreams();
 });
