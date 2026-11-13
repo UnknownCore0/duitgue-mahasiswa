@@ -18,7 +18,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <!-- Naikkan versi ini jika ada update CSS -->
-  <link rel="stylesheet" href="./style.css?v=183">
+  <link rel="stylesheet" href="./style.css?v=184">
 </head>
 <body>
   
@@ -352,24 +352,10 @@
       <div class="panel">
         <h3 style="font-size: 1rem; margin-bottom: 1rem;">Tambah Kategori Baru</h3>
         <form id="categoryForm">
-          <div class="row" style="grid-template-columns: 2fr 1fr;">
+          <div class="row" style="grid-template-columns: 1fr 80px;">
             <input type="text" id="newCatName" placeholder="Nama Kategori (mis. Uang Kas)" required maxlength="20">
-            <select id="newCatIcon" aria-label="Ikon Kategori">
-              <option value="✨">✨ Lainnya</option>
-              <option value="🍔">🍔 Makan</option>
-              <option value="🚌">🚌 Transport</option>
-              <option value="📚">📚 Kuliah</option>
-              <option value="🎮">🎮 Hiburan</option>
-              <option value="🏠">🏠 Kos</option>
-              <option value="💰">💰 Uang Saku</option>
-              <option value="🎓">🎓 Beasiswa</option>
-              <option value="💼">💼 Gaji</option>
-              <option value="🎁">🎁 Hadiah</option>
-              <option value="🐷">🐷 Tabungan</option>
-              <option value="☕">☕ Ngopi</option>
-              <option value="🛒">🛒 Belanja</option>
-              <option value="💊">💊 Obat</option>
-            </select>
+            <!-- INPUT EMOJI BEBAS -->
+            <input type="text" id="newCatIcon" placeholder="Ikon" maxlength="2" style="text-align: center; font-size: 1.2rem;" value="✨">
           </div>
           <div class="row" style="grid-template-columns: 1fr;">
              <select id="newCatType">
@@ -518,7 +504,7 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=183"></script>
+  <script src="./app.js?v=184"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
