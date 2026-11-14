@@ -762,14 +762,15 @@ window.markPaid = function(id) {
     const debt = debts[index];
     debt.isPaid = true;
     
+    // Transaksi Balik: Jika tadi Meminjamkan (pengeluaran), sekarang Pemasukan. Begitu juga sebaliknya.
     const autoTx = {
       id: crypto.randomUUID(),
-      type: debt.type === 'owe' ? 'expense' : 'income',
+      type: debt.type === 'owe' ? 'expense' : 'income', 
       date: getTodayString(),
       desc: `Pelunasan Hutang: ${debt.name}`,
       amount: debt.amount,
       category: 'Lainnya',
-      linkedDebtId: debt.id // <-- Tautkan transaksi ke hutang
+      linkedDebtId: debt.id 
     };
     
     transactions.push(autoTx);
@@ -797,6 +798,7 @@ $('debtForm').addEventListener('submit', (e) => {
   const name = $('debtName').value.trim();
   const amount = Number($('debtAmount').value);
   const desc = $('debtDesc').value.trim();
+  const type = $('debtType').value;
   if (!name || amount <= 0) return;
 
   if (editingDebtId) {
@@ -804,7 +806,7 @@ $('debtForm').addEventListener('submit', (e) => {
     if (index > -1) {
       debts[index] = {
         ...debts[index],
-        type: $('debtType').value,
+        type: type,
         name: name,
         amount: amount,
         desc: desc
@@ -816,12 +818,31 @@ $('debtForm').addEventListener('submit', (e) => {
     btn.textContent = TRANSLATIONS[userLang].save_btn;
     btn.classList.remove('btn-primary');
   } else {
-    debts.push({ id: crypto.randomUUID(), type: $('debtType').value, name, amount, desc, isPaid: false, linkedTxId: null });
+    // 1. Buat ID Hutang
+    const debtId = crypto.randomUUID();
+    
+    // 2. Buat Transaksi Otomatis (Sinkronisasi Saldo)
+    const autoTxId = crypto.randomUUID();
+    const autoTx = {
+      id: autoTxId,
+      type: type === 'owe' ? 'income' : 'expense', // Jika berhutang = uang masuk. Jika meminjamkan = uang keluar.
+      date: getTodayString(),
+      desc: `Hutang Baru: ${name}`,
+      amount: amount,
+      category: 'Lainnya',
+      linkedDebtId: debtId // Tautkan dengan hutang
+    };
+    
+    transactions.push(autoTx);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+
+    // 3. Simpan Data Hutang
+    debts.push({ id: debtId, type: type, name, amount, desc, isPaid: false, linkedTxId: autoTxId });
     localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
   }
 
   $('debtName').value = ''; $('debtAmount').value = ''; $('debtDesc').value = '';
-  renderDebts();
+  renderDebts(); render(); renderRekap(); // Update semua tampilan
 });
 
 renderDebts();
