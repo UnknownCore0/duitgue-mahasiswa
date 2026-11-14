@@ -18,7 +18,6 @@ const EMOJI = {
   'Food': '🍔', 'College': '📚', 'Entertainment': '🎮', 'Rent & Bills': '🏠',
   'Others': '✨', 'Allowance': '💰', 'Scholarship': '🎓', 'Salary / Part-time': '💼', 'Gift': '🎁', 'Savings': '🐷'
 };
-// Fungsi untuk mengambil emoji (prioritaskan dari kategori kustom)
 function getEmoji(cat) {
   const custom = customCategories.find(c => c.name === cat);
   if (custom && custom.icon) return custom.icon;
@@ -314,7 +313,8 @@ $('form').addEventListener('submit', e => {
         name: `${splitPeople - 1} Teman (Split: ${desc})`,
         amount: totalFriendShare,
         desc: `Patungan dari ${myName}`,
-        isPaid: false
+        isPaid: false,
+        linkedTxId: null // Penanda transaksi terkait
       });
       localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
       renderDebts();
@@ -768,7 +768,8 @@ window.markPaid = function(id) {
       date: getTodayString(),
       desc: `Pelunasan Hutang: ${debt.name}`,
       amount: debt.amount,
-      category: 'Lainnya'
+      category: 'Lainnya',
+      linkedDebtId: debt.id // <-- Tautkan transaksi ke hutang
     };
     
     transactions.push(autoTx);
@@ -780,8 +781,14 @@ window.markPaid = function(id) {
 };
 
 window.deleteDebt = function(id) {
-  if (confirm('Yakin ingin menghapus catatan ini?')) {
-    debts = debts.filter(d => d.id !== id); localStorage.setItem(DEBT_KEY, JSON.stringify(debts)); renderDebts();
+  if (confirm('Yakin ingin menghapus catatan ini? (Transaksi terkait juga akan dihapus)')) {
+    debts = debts.filter(d => d.id !== id); 
+    // Hapus transaksi otomatis yang terhubung dengan hutang ini
+    transactions = transactions.filter(t => t.linkedDebtId !== id);
+    
+    localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+    renderDebts(); render(); renderRekap();
   }
 };
 
@@ -809,7 +816,7 @@ $('debtForm').addEventListener('submit', (e) => {
     btn.textContent = TRANSLATIONS[userLang].save_btn;
     btn.classList.remove('btn-primary');
   } else {
-    debts.push({ id: crypto.randomUUID(), type: $('debtType').value, name, amount, desc, isPaid: false });
+    debts.push({ id: crypto.randomUUID(), type: $('debtType').value, name, amount, desc, isPaid: false, linkedTxId: null });
     localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
   }
 
