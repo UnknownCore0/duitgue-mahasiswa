@@ -129,21 +129,16 @@ const CAT_MAP = {
 // ================= CUSTOM MODAL HELPER =================
 let modalResolve = null;
 
-/**
- * Tipe modal:
- * - 'input'   : input teks/angka/password + tombol Batal/Lanjut
- * - 'confirm' : hanya pesan + tombol Batal/Lanjut (untuk konfirmasi)
- */
 function showModal({
   title,
   desc = '',
-  inputType = 'text',       // text | number | password | tel
+  inputType = 'text',       
   placeholder = '',
   confirmText = 'Lanjut',
   cancelText = 'Batal',
-  mode = 'input',           // 'input' | 'confirm'
-  danger = false,           // tombol konfirmasi jadi merah
-  validate = null           // function(value) => string | null  (return pesan error jika invalid)
+  mode = 'input',           
+  danger = false,           
+  validate = null           
 }) {
   return new Promise((resolve) => {
     modalResolve = resolve;
@@ -161,7 +156,6 @@ function showModal({
     descEl.textContent = desc;
     descEl.classList.toggle('hidden', !desc);
 
-    // Sembunyikan input jika mode confirm
     if (mode === 'confirm') {
       inputEl.classList.add('hidden');
     } else {
@@ -231,7 +225,6 @@ function showModal({
   });
 }
 
-// Shortcut
 const showInput   = (opts) => showModal({ ...opts, mode: 'input' });
 const showConfirm = (opts) => showModal({ ...opts, mode: 'confirm' });
 
@@ -284,29 +277,31 @@ function updateFormPlaceholders() {
   $('dreamTarget').placeholder = TRANSLATIONS[userLang].dream_target_placeholder;
 }
 
-// ================= THEME + AUTO DARK MODE =================
-const THEME_MANUAL_KEY = 'theme-manual-mahasiswa'; // penanda user sudah pilih manual
+// ================= THEME + AUTO DARK MODE (FIXED & iOS OPTIMIZED) =================
+const THEME_MANUAL_KEY = 'theme-manual-mahasiswa'; // HANYA BOLEH ADA SATU BARIS INI
 
 function getSystemTheme() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function getEffectiveTheme() {
-  // Jika user sudah pernah toggle manual, pakai pilihan user
   const manual = localStorage.getItem(THEME_MANUAL_KEY);
   if (manual) return manual;
-  // Jika belum, ikuti sistem
   return getSystemTheme();
 }
 
 function applyTheme(theme, color, opts = {}) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.color = color;
-  $('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+  
+  const toggleBtn = $('themeToggle');
+  if (toggleBtn) {
+    toggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+  
   localStorage.setItem(THEME_KEY, theme);
   localStorage.setItem(COLOR_KEY, color);
 
-  // Simpan pilihan manual hanya jika diminta (saat user klik toggle)
   if (opts.manual) {
     localStorage.setItem(THEME_MANUAL_KEY, theme);
   }
@@ -320,28 +315,34 @@ const savedColor = localStorage.getItem(COLOR_KEY) || 'indigo';
 applyTheme(getEffectiveTheme(), savedColor);
 applyLanguage(userLang);
 
-// Toggle manual — mengalahkan preferensi OS
 $('themeToggle').addEventListener('click', () => {
   const newTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
   applyTheme(newTheme, document.documentElement.dataset.color, { manual: true });
 });
 
-// Dengarkan perubahan tema OS secara real-time
 const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 const handleSystemThemeChange = (e) => {
-  // Hanya ikuti OS jika user belum pernah pilih manual
   if (!localStorage.getItem(THEME_MANUAL_KEY)) {
     applyTheme(e.matches ? 'dark' : 'light', document.documentElement.dataset.color);
   }
 };
 
-// Dukungan browser modern + fallback lama
 if (darkModeQuery.addEventListener) {
   darkModeQuery.addEventListener('change', handleSystemThemeChange);
 } else {
-  // Safari < 14
   darkModeQuery.addListener(handleSystemThemeChange);
 }
+
+// 🔥 TRIK KHUSUS IPHONE (SAFARI):
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !localStorage.getItem(THEME_MANUAL_KEY)) {
+    const currentSystemTheme = getSystemTheme();
+    if (document.documentElement.dataset.theme !== currentSystemTheme) {
+      applyTheme(currentSystemTheme, document.documentElement.dataset.color);
+    }
+  }
+});
+// ================= END THEME =================
 
 function updateStreak() {
   const todayStr = getTodayString();
@@ -927,7 +928,6 @@ window.markPaid = function(id) {
   }
 };
 
-// ⬇️ UPGRADE LEVEL 3: Hapus Hutang pakai Modal Konfirmasi
 window.deleteDebt = async function(id) {
   const ok = await showConfirm({
     title: '🗑 Hapus Catatan Hutang?',
@@ -1033,7 +1033,6 @@ function renderDreams() {
   }).join('');
 }
 
-// ⬇️ UPGRADE LEVEL 3: Tambah tabungan pakai Modal input number
 window.addSaving = async function(id) {
   const index = dreams.findIndex(d => d.id === id);
   if (index === -1) return;
@@ -1089,7 +1088,6 @@ window.editDream = function(id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// ⬇️ UPGRADE LEVEL 3: Hapus impian pakai Modal Konfirmasi
 window.deleteDream = async function(id) {
   const ok = await showConfirm({
     title: '🗑 Hapus Impian?',
@@ -1163,7 +1161,6 @@ function renderCustomCategories() {
   }).join('');
 }
 
-// ⬇️ UPGRADE LEVEL 3: Hapus kategori kustom pakai Modal Konfirmasi
 window.deleteCustomCategory = async function(id) {
   const ok = await showConfirm({
     title: '🗑 Hapus Kategori?',
@@ -1229,7 +1226,6 @@ function updatePinStatus() {
   }
 }
 
-// ⬇️ UPGRADE LEVEL 3: Keamanan PIN pakai Modal (input PIN + konfirmasi)
 $('btn-security').addEventListener('click', async () => {
   const savedPin = localStorage.getItem(PIN_HASH_KEY);
   
@@ -1308,7 +1304,6 @@ $('keyDel').addEventListener('click', () => {
   }
 });
 
-// ⬇️ UPGRADE LEVEL 3: Reset PIN pakai Modal Konfirmasi (danger)
 $('forgotPinBtn').addEventListener('click', async () => {
   const ok = await showConfirm({
     title: '⚠️ Reset Aplikasi?',
@@ -1342,7 +1337,6 @@ function renderProfile() {
 }
 renderProfile();
 
-// ⬇️ UPGRADE LEVEL 3: Edit nama profil pakai Modal input text
 document.getElementById('editProfileBtn').addEventListener('click', async (e) => {
   e.stopPropagation();
   const newName = await showInput({
