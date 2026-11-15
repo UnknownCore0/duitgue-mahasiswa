@@ -1607,9 +1607,3 @@ window.addEventListener('touchstart', () => {
     }
   }
 }, { passive: true });
-document.getElementById('debugThemeBtn').addEventListener('click', () => {
-  // Menghapus memori pilihan manual
-  localStorage.removeItem('theme-manual-mahasiswa');
-  alert('Memori Mode Manual berhasil dihapus! Aplikasi sekarang akan mengikuti tema OS (Auto).');
-  location.reload();
-});
