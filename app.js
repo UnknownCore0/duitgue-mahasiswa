@@ -284,27 +284,64 @@ function updateFormPlaceholders() {
   $('dreamTarget').placeholder = TRANSLATIONS[userLang].dream_target_placeholder;
 }
 
-function applyTheme(theme, color) {
+// ================= THEME + AUTO DARK MODE =================
+const THEME_MANUAL_KEY = 'theme-manual-mahasiswa'; // penanda user sudah pilih manual
+
+function getSystemTheme() {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function getEffectiveTheme() {
+  // Jika user sudah pernah toggle manual, pakai pilihan user
+  const manual = localStorage.getItem(THEME_MANUAL_KEY);
+  if (manual) return manual;
+  // Jika belum, ikuti sistem
+  return getSystemTheme();
+}
+
+function applyTheme(theme, color, opts = {}) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.color = color;
   $('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
   localStorage.setItem(THEME_KEY, theme);
   localStorage.setItem(COLOR_KEY, color);
 
+  // Simpan pilihan manual hanya jika diminta (saat user klik toggle)
+  if (opts.manual) {
+    localStorage.setItem(THEME_MANUAL_KEY, theme);
+  }
+
   document.querySelectorAll('.color-opt').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-color') === color);
   });
 }
 
-const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
 const savedColor = localStorage.getItem(COLOR_KEY) || 'indigo';
-applyTheme(savedTheme, savedColor);
+applyTheme(getEffectiveTheme(), savedColor);
 applyLanguage(userLang);
 
+// Toggle manual — mengalahkan preferensi OS
 $('themeToggle').addEventListener('click', () => {
   const newTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-  applyTheme(newTheme, document.documentElement.dataset.color);
+  applyTheme(newTheme, document.documentElement.dataset.color, { manual: true });
 });
+
+// Dengarkan perubahan tema OS secara real-time
+const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+const handleSystemThemeChange = (e) => {
+  // Hanya ikuti OS jika user belum pernah pilih manual
+  if (!localStorage.getItem(THEME_MANUAL_KEY)) {
+    applyTheme(e.matches ? 'dark' : 'light', document.documentElement.dataset.color);
+  }
+};
+
+// Dukungan browser modern + fallback lama
+if (darkModeQuery.addEventListener) {
+  darkModeQuery.addEventListener('change', handleSystemThemeChange);
+} else {
+  // Safari < 14
+  darkModeQuery.addListener(handleSystemThemeChange);
+}
 
 function updateStreak() {
   const todayStr = getTodayString();
