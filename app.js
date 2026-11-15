@@ -1593,3 +1593,17 @@ window.addEventListener('load', () => {
     }, 1000);
   }
 });
+// 🔥 TRIK EKSTRA KERAS UNTUK SAFARI IPHONE
+// Memaksa Safari mengecek tema saat layar disentuh atau di-scroll
+window.addEventListener('touchstart', () => {
+  // Cek apakah user belum memilih tema manual
+  if (!localStorage.getItem('theme-manual-mahasiswa')) {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const sysTheme = isDark ? 'dark' : 'light';
+    
+    // Jika tema aplikasi beda dengan tema OS, paksa ganti
+    if (document.documentElement.dataset.theme !== sysTheme) {
+      applyTheme(sysTheme, document.documentElement.dataset.color);
+    }
+  }
+}, { passive: true });
