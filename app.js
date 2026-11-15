@@ -1156,13 +1156,74 @@ photoInput.addEventListener('change', (e) => {
   }
 });
 
-// ================= BACKUP TERENKRIPSI =================
-document.getElementById('btn-backup').addEventListener('click', () => {
-  const password = prompt("Buat Password untuk mengenkripsi file backup ini (Wajib diingat!):");
-  if (!password) {
-    showToast("Backup dibatalkan. Password diperlukan untuk mengamankan data.");
-    return;
-  }
+// ================= CUSTOM MODAL FUNCTION =================
+function showModal({ title, desc, inputType = 'text', placeholder = '', confirmText = 'Simpan' }) {
+  return new Promise((resolve) => {
+    const modal = $('customModal');
+    const modalTitle = $('modalTitle');
+    const modalDesc = $('modalDesc');
+    const modalInput = $('modalInput');
+    const modalError = $('modalError');
+    const modalConfirmBtn = $('modalConfirmBtn');
+    const modalCancelBtn = $('modalCancelBtn');
+    const modalCloseBtn = $('modalCloseBtn');
+
+    // Atur konten modal
+    modalTitle.textContent = title;
+    modalDesc.textContent = desc;
+    modalInput.type = inputType;
+    modalInput.placeholder = placeholder;
+    modalInput.value = '';
+    modalConfirmBtn.textContent = confirmText;
+    modalError.classList.add('hidden');
+    modalInput.classList.remove('error');
+
+    // Tampilkan modal
+    modal.classList.remove('hidden');
+    setTimeout(() => modalInput.focus(), 100);
+
+    // Fungsi untuk menutup modal
+    const closeModal = (value) => {
+      modal.classList.add('hidden');
+      // Bersihkan event listener agar tidak menumpuk
+      modalConfirmBtn.onclick = null;
+      modalCancelBtn.onclick = null;
+      modalCloseBtn.onclick = null;
+      modalInput.onkeydown = null;
+      resolve(value);
+    };
+
+    // Event listener
+    modalConfirmBtn.onclick = () => {
+      if (inputType === 'password' && modalInput.value.trim() === '') {
+        modalError.textContent = 'Password tidak boleh kosong!';
+        modalError.classList.remove('hidden');
+        modalInput.classList.add('error');
+        return;
+      }
+      closeModal(modalInput.value);
+    };
+
+    modalCancelBtn.onclick = () => closeModal(null);
+    modalCloseBtn.onclick = () => closeModal(null);
+    
+    modalInput.onkeydown = (e) => {
+      if (e.key === 'Enter') modalConfirmBtn.click();
+    };
+  });
+}
+
+// ================= BACKUP TERENKRIPSI (MENGGUNAKAN MODAL) =================
+document.getElementById('btn-backup').addEventListener('click', async () => {
+  const password = await showModal({
+    title: '🔐 Enkripsi Backup',
+    desc: 'Buat password untuk mengenkripsi file backup ini. (Wajib diingat!)',
+    inputType: 'password',
+    placeholder: 'Masukkan password...',
+    confirmText: 'Backup Sekarang'
+  });
+
+  if (!password) return; // Batal atau kosong
 
   const dataToBackup = { transactions, budgets, streak, profile, debts, dreams, customCategories };
   const dataStr = JSON.stringify(dataToBackup);
@@ -1180,53 +1241,57 @@ document.getElementById('btn-backup').addEventListener('click', () => {
   showToast("Backup berhasil diunduh dan diamankan!", 'success');
 });
 
-// ================= RESTORE TERENKRIPSI =================
+// ================= RESTORE TERENKRIPSI (MENGGUNAKAN MODAL) =================
 const restoreInput = document.getElementById('restoreInput');
 document.getElementById('btn-restore').addEventListener('click', () => { restoreInput.click(); });
 
-restoreInput.addEventListener('change', (e) => {
+restoreInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      try {
-        const encryptedData = event.target.result;
-        
-        const password = prompt("Masukkan password untuk membuka file backup ini:");
-        if (!password) {
-          showToast("Restore dibatalkan.");
-          restoreInput.value = '';
-          return;
-        }
+  if (!file) return;
 
-        const decryptedBytes = CryptoJS.AES.decrypt(encryptedData, password);
-        const decryptedStr = decryptedBytes.toString(CryptoJS.enc.Utf8);
+  const password = await showModal({
+    title: '🔓 Buka Backup',
+    desc: 'Masukkan password untuk membuka file backup ini.',
+    inputType: 'password',
+    placeholder: 'Masukkan password...',
+    confirmText: 'Buka File'
+  });
 
-        if (!decryptedStr) {
-          throw new Error("Password salah atau file korup.");
-        }
-
-        const parsedData = JSON.parse(decryptedStr);
-        if (parsedData.transactions && parsedData.profile) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData.transactions));
-          localStorage.setItem(BUDGET_KEY, JSON.stringify(parsedData.budgets || {}));
-          localStorage.setItem(STREAK_KEY, JSON.stringify(parsedData.streak || { count: 0, lastDate: null }));
-          localStorage.setItem(PROFILE_KEY, JSON.stringify(parsedData.profile));
-          localStorage.setItem(DEBT_KEY, JSON.stringify(parsedData.debts || []));
-          localStorage.setItem(DREAM_KEY, JSON.stringify(parsedData.dreams || []));
-          localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(parsedData.customCategories || []));
-          showToast('Data berhasil dipulihkan!', 'success'); 
-          window.location.reload();
-        } else { 
-          showToast('Format file backup tidak valid.'); 
-        }
-      } catch (err) { 
-        showToast('Gagal membuka file. Pastikan password benar.'); 
-        restoreInput.value = '';
-      }
-    };
-    reader.readAsText(file);
+  if (!password) {
+    restoreInput.value = '';
+    return;
   }
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    try {
+      const encryptedData = event.target.result;
+      const decryptedBytes = CryptoJS.AES.decrypt(encryptedData, password);
+      const decryptedStr = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+      if (!decryptedStr) throw new Error("Password salah.");
+
+      const parsedData = JSON.parse(decryptedStr);
+      if (parsedData.transactions && parsedData.profile) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData.transactions));
+        localStorage.setItem(BUDGET_KEY, JSON.stringify(parsedData.budgets || {}));
+        localStorage.setItem(STREAK_KEY, JSON.stringify(parsedData.streak || { count: 0, lastDate: null }));
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(parsedData.profile));
+        localStorage.setItem(DEBT_KEY, JSON.stringify(parsedData.debts || []));
+        localStorage.setItem(DREAM_KEY, JSON.stringify(parsedData.dreams || []));
+        localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(parsedData.customCategories || []));
+        showToast('Data berhasil dipulihkan!', 'success'); 
+        window.location.reload();
+      } else { 
+        showToast('Format file backup tidak valid.'); 
+      }
+    } catch (err) { 
+      showToast('Gagal membuka file. Pastikan password benar.'); 
+    } finally {
+      restoreInput.value = '';
+    }
+  };
+  reader.readAsText(file);
 });
 
 function showPage(pageId) {

@@ -18,7 +18,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <!-- Naikkan versi ini jika ada update CSS -->
-  <link rel="stylesheet" href="./style.css?v=187">
+  <link rel="stylesheet" href="./style.css?v=189">
 </head>
 <body> 
   
@@ -504,7 +504,24 @@
     <button id="undoBtn" class="toast-btn">Urungkan</button>
   </div>
 
-  <script src="./app.js?v=187"></script>
+  <!-- ================= CUSTOM MODAL (GLOBAL) ================= -->
+  <div id="customModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">Judul Modal</h3>
+        <button id="modalCloseBtn" class="modal-close">✕</button>
+      </div>
+      <p id="modalDesc" class="modal-desc">Deskripsi modal.</p>
+      <input type="text" id="modalInput" class="modal-input" placeholder="Ketik di sini...">
+      <p id="modalError" class="modal-error hidden"></p>
+      <div class="modal-actions">
+        <button id="modalCancelBtn" class="btn-modal btn-modal-secondary">Batal</button>
+        <button id="modalConfirmBtn" class="btn-modal btn-modal-primary">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js?v=189"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
