@@ -18,10 +18,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <!-- Naikkan versi ini jika ada update CSS -->
-  <link rel="stylesheet" href="./style.css?v=194">
+  <link rel="stylesheet" href="./style.css?v=195">
 </head>
 <body> 
   
+  <!-- 🔥 TOMBOL DEBUG (Hanya untuk tes Auto Dark Mode) 🔥 -->
+  <button id="debugThemeBtn" style="position:fixed; top:10px; left:10px; z-index:99999; background:red; color:white; padding:10px; border-radius:5px; font-weight:bold; border:none;">CEK TEMA</button>
+
   <!-- ================= LAYAR KUNCI (LOCK SCREEN) ================= -->
   <div id="lockScreen" class="lock-screen hidden"> 
     <div class="lock-icon">🔒</div>
@@ -521,7 +524,7 @@
     </div>
   </div>
 
-  <script src="./app.js?v=194"></script>
+  <script src="./app.js?v=195"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
