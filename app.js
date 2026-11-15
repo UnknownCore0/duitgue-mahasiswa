@@ -126,6 +126,116 @@ const CAT_MAP = {
   'Savings': 'Tabungan'
 };
 
+// ================= CUSTOM MODAL HELPER =================
+let modalResolve = null;
+
+/**
+ * Tipe modal:
+ * - 'input'   : input teks/angka/password + tombol Batal/Lanjut
+ * - 'confirm' : hanya pesan + tombol Batal/Lanjut (untuk konfirmasi)
+ */
+function showModal({
+  title,
+  desc = '',
+  inputType = 'text',       // text | number | password | tel
+  placeholder = '',
+  confirmText = 'Lanjut',
+  cancelText = 'Batal',
+  mode = 'input',           // 'input' | 'confirm'
+  danger = false,           // tombol konfirmasi jadi merah
+  validate = null           // function(value) => string | null  (return pesan error jika invalid)
+}) {
+  return new Promise((resolve) => {
+    modalResolve = resolve;
+
+    const modal = $('appModal');
+    const titleEl = $('modalTitle');
+    const descEl = $('modalDesc');
+    const inputEl = $('modalInput');
+    const errorEl = $('modalError');
+    const confirmBtn = $('modalConfirm');
+    const cancelBtn = $('modalCancel');
+    const closeBtn = $('modalClose');
+
+    titleEl.textContent = title;
+    descEl.textContent = desc;
+    descEl.classList.toggle('hidden', !desc);
+
+    // Sembunyikan input jika mode confirm
+    if (mode === 'confirm') {
+      inputEl.classList.add('hidden');
+    } else {
+      inputEl.classList.remove('hidden');
+      inputEl.type = inputType;
+      inputEl.placeholder = placeholder;
+      inputEl.value = '';
+      inputEl.classList.remove('error');
+    }
+
+    confirmBtn.textContent = confirmText;
+    cancelBtn.textContent = cancelText;
+    confirmBtn.classList.toggle('btn-modal-danger', !!danger);
+    errorEl.classList.add('hidden');
+    errorEl.textContent = '';
+
+    modal.classList.remove('hidden');
+    if (mode !== 'confirm') setTimeout(() => inputEl.focus(), 100);
+
+    const cleanup = () => {
+      confirmBtn.onclick = null;
+      cancelBtn.onclick = null;
+      closeBtn.onclick = null;
+      inputEl.onkeydown = null;
+      modal.onclick = null;
+    };
+
+    const close = (value) => {
+      modal.classList.add('hidden');
+      cleanup();
+      const r = modalResolve;
+      modalResolve = null;
+      if (r) r(value);
+    };
+
+    confirmBtn.onclick = () => {
+      if (mode === 'confirm') {
+        close(true);
+        return;
+      }
+      const value = inputEl.value.trim();
+      if (validate) {
+        const err = validate(value);
+        if (err) {
+          errorEl.textContent = err;
+          errorEl.classList.remove('hidden');
+          inputEl.classList.add('error');
+          inputEl.focus();
+          return;
+        }
+      }
+      close(value);
+    };
+
+    cancelBtn.onclick = () => close(null);
+    closeBtn.onclick = () => close(null);
+    modal.onclick = (e) => { if (e.target === modal) close(null); };
+
+    inputEl.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmBtn.click();
+      } else if (e.key === 'Escape') {
+        close(null);
+      }
+    };
+  });
+}
+
+// Shortcut
+const showInput   = (opts) => showModal({ ...opts, mode: 'input' });
+const showConfirm = (opts) => showModal({ ...opts, mode: 'confirm' });
+
+// ================= FUNGSI UTAMA =================
 function applyLanguage(lang) {
   userLang = lang;
   localStorage.setItem(LANG_KEY, lang);
@@ -314,7 +424,7 @@ $('form').addEventListener('submit', e => {
         amount: totalFriendShare,
         desc: `Patungan dari ${myName}`,
         isPaid: false,
-        linkedTxId: null // Penanda transaksi terkait
+        linkedTxId: null
       });
       localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
       renderDebts();
@@ -762,7 +872,6 @@ window.markPaid = function(id) {
     const debt = debts[index];
     debt.isPaid = true;
     
-    // Transaksi Balik: Jika tadi Meminjamkan (pengeluaran), sekarang Pemasukan. Begitu juga sebaliknya.
     const autoTx = {
       id: crypto.randomUUID(),
       type: debt.type === 'owe' ? 'expense' : 'income', 
@@ -781,16 +890,23 @@ window.markPaid = function(id) {
   }
 };
 
-window.deleteDebt = function(id) {
-  if (confirm('Yakin ingin menghapus catatan ini? (Transaksi terkait juga akan dihapus)')) {
-    debts = debts.filter(d => d.id !== id); 
-    // Hapus transaksi otomatis yang terhubung dengan hutang ini
-    transactions = transactions.filter(t => t.linkedDebtId !== id);
-    
-    localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-    renderDebts(); render(); renderRekap();
-  }
+// ⬇️ UPGRADE LEVEL 3: Hapus Hutang pakai Modal Konfirmasi
+window.deleteDebt = async function(id) {
+  const ok = await showConfirm({
+    title: '🗑 Hapus Catatan Hutang?',
+    desc: 'Catatan ini dan transaksi otomatis yang terhubung akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
+    confirmText: 'Ya, Hapus',
+    danger: true
+  });
+  if (!ok) return;
+
+  debts = debts.filter(d => d.id !== id); 
+  transactions = transactions.filter(t => t.linkedDebtId !== id);
+  
+  localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+  renderDebts(); render(); renderRekap();
+  showToast('Catatan hutang dihapus.', 'success');
 };
 
 $('debtForm').addEventListener('submit', (e) => {
@@ -818,31 +934,27 @@ $('debtForm').addEventListener('submit', (e) => {
     btn.textContent = TRANSLATIONS[userLang].save_btn;
     btn.classList.remove('btn-primary');
   } else {
-    // 1. Buat ID Hutang
     const debtId = crypto.randomUUID();
-    
-    // 2. Buat Transaksi Otomatis (Sinkronisasi Saldo)
     const autoTxId = crypto.randomUUID();
     const autoTx = {
       id: autoTxId,
-      type: type === 'owe' ? 'income' : 'expense', // Jika berhutang = uang masuk. Jika meminjamkan = uang keluar.
+      type: type === 'owe' ? 'income' : 'expense',
       date: getTodayString(),
       desc: `Hutang Baru: ${name}`,
       amount: amount,
       category: 'Lainnya',
-      linkedDebtId: debtId // Tautkan dengan hutang
+      linkedDebtId: debtId
     };
     
     transactions.push(autoTx);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
 
-    // 3. Simpan Data Hutang
     debts.push({ id: debtId, type: type, name, amount, desc, isPaid: false, linkedTxId: autoTxId });
     localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
   }
 
   $('debtName').value = ''; $('debtAmount').value = ''; $('debtDesc').value = '';
-  renderDebts(); render(); renderRekap(); // Update semua tampilan
+  renderDebts(); render(); renderRekap();
 });
 
 renderDebts();
@@ -884,31 +996,45 @@ function renderDreams() {
   }).join('');
 }
 
-window.addSaving = function(id) {
-  const amount = prompt(userLang === 'en' ? 'Enter saving amount (Rp):' : 'Masukkan nominal tabungan (Rp):');
-  if (amount && !isNaN(amount) && Number(amount) > 0) {
-    const index = dreams.findIndex(d => d.id === id);
-    if (index > -1) {
-      const savedAmount = Number(amount);
-      const dreamName = dreams[index].name;
+// ⬇️ UPGRADE LEVEL 3: Tambah tabungan pakai Modal input number
+window.addSaving = async function(id) {
+  const index = dreams.findIndex(d => d.id === id);
+  if (index === -1) return;
 
-      dreams[index].saved += savedAmount;
-      localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
-
-      const autoTransaction = {
-        id: crypto.randomUUID(),
-        type: 'expense',
-        date: getTodayString(),
-        desc: `${TRANSLATIONS[userLang].saving_desc}${dreamName}`,
-        amount: savedAmount,
-        category: 'Tabungan'
-      };
-      transactions.push(autoTransaction);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-
-      renderDreams(); render(); renderRekap();
+  const amountStr = await showInput({
+    title: '🐷 Tambah Tabungan',
+    desc: `Masukkan nominal tabungan untuk impian "${dreams[index].name}".`,
+    inputType: 'number',
+    placeholder: 'Nominal (Rp)',
+    confirmText: 'Simpan',
+    validate: (v) => {
+      if (!v) return 'Nominal wajib diisi.';
+      const n = Number(v);
+      if (!isFinite(n) || n <= 0) return 'Nominal harus lebih dari 0.';
+      return null;
     }
-  }
+  });
+  if (amountStr === null) return;
+
+  const savedAmount = Math.round(Number(amountStr));
+  const dreamName = dreams[index].name;
+
+  dreams[index].saved += savedAmount;
+  localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+
+  const autoTransaction = {
+    id: crypto.randomUUID(),
+    type: 'expense',
+    date: getTodayString(),
+    desc: `${TRANSLATIONS[userLang].saving_desc}${dreamName}`,
+    amount: savedAmount,
+    category: 'Tabungan'
+  };
+  transactions.push(autoTransaction);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+
+  renderDreams(); render(); renderRekap();
+  showToast(`Berhasil menabung ${rupiah(savedAmount)} untuk "${dreamName}"`, 'success');
 };
 
 window.editDream = function(id) {
@@ -926,12 +1052,20 @@ window.editDream = function(id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-window.deleteDream = function(id) {
-  if (confirm(userLang === 'en' ? 'Delete this dream?' : 'Hapus impian ini?')) {
-    dreams = dreams.filter(d => d.id !== id);
-    localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
-    renderDreams();
-  }
+// ⬇️ UPGRADE LEVEL 3: Hapus impian pakai Modal Konfirmasi
+window.deleteDream = async function(id) {
+  const ok = await showConfirm({
+    title: '🗑 Hapus Impian?',
+    desc: 'Impian ini akan dihapus. Transaksi tabungan yang sudah tercatat tidak ikut terhapus.',
+    confirmText: 'Ya, Hapus',
+    danger: true
+  });
+  if (!ok) return;
+
+  dreams = dreams.filter(d => d.id !== id);
+  localStorage.setItem(DREAM_KEY, JSON.stringify(dreams));
+  renderDreams();
+  showToast('Impian dihapus.', 'success');
 };
 
 $('dreamForm').addEventListener('submit', (e) => {
@@ -992,13 +1126,21 @@ function renderCustomCategories() {
   }).join('');
 }
 
-window.deleteCustomCategory = function(id) {
-  if (confirm('Hapus kategori ini? (Transaksi yang sudah ada tidak akan terhapus)')) {
-    customCategories = customCategories.filter(c => c.id !== id);
-    localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(customCategories));
-    renderCustomCategories();
-    fillCategories(); fillFilterCategories(); fillBudgetCategories();
-  }
+// ⬇️ UPGRADE LEVEL 3: Hapus kategori kustom pakai Modal Konfirmasi
+window.deleteCustomCategory = async function(id) {
+  const ok = await showConfirm({
+    title: '🗑 Hapus Kategori?',
+    desc: 'Kategori ini akan dihapus. Transaksi yang sudah ada dengan kategori ini TIDAK akan terhapus.',
+    confirmText: 'Ya, Hapus',
+    danger: true
+  });
+  if (!ok) return;
+
+  customCategories = customCategories.filter(c => c.id !== id);
+  localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(customCategories));
+  renderCustomCategories();
+  fillCategories(); fillFilterCategories(); fillBudgetCategories();
+  showToast('Kategori dihapus.', 'success');
 };
 
 $('categoryForm').addEventListener('submit', (e) => {
@@ -1019,6 +1161,7 @@ $('categoryForm').addEventListener('submit', (e) => {
   $('newCatName').value = '';
   renderCustomCategories();
   fillCategories(); fillFilterCategories(); fillBudgetCategories();
+  showToast('Kategori berhasil ditambahkan.', 'success');
 });
 
 // ================= LOGIKA KEAMANAN PIN =================
@@ -1049,30 +1192,50 @@ function updatePinStatus() {
   }
 }
 
+// ⬇️ UPGRADE LEVEL 3: Keamanan PIN pakai Modal (input PIN + konfirmasi)
 $('btn-security').addEventListener('click', async () => {
   const savedPin = localStorage.getItem(PIN_HASH_KEY);
   
   if (!savedPin) {
-    const newPin = prompt('Buat PIN baru (4 angka):');
-    if (newPin && newPin.length === 4 && /^\d+$/.test(newPin)) {
-      const hash = await hashPIN(newPin);
-      localStorage.setItem(PIN_HASH_KEY, hash);
-      showToast('PIN berhasil dibuat!', 'success');
+    const newPin = await showInput({
+      title: '🔐 Aktifkan PIN',
+      desc: 'Buat PIN 4 angka. PIN ini akan diminta setiap kali aplikasi dibuka.',
+      inputType: 'password',
+      placeholder: 'Masukkan 4 angka',
+      confirmText: 'Aktifkan PIN',
+      validate: (v) => {
+        if (!/^\d{4}$/.test(v)) return 'PIN harus 4 angka.';
+        return null;
+      }
+    });
+    if (newPin === null) return;
+
+    const hash = await hashPIN(newPin);
+    localStorage.setItem(PIN_HASH_KEY, hash);
+    showToast('PIN berhasil dibuat!', 'success');
+    updatePinStatus();
+  } else {
+    const confirmPin = await showInput({
+      title: '🔓 Nonaktifkan PIN',
+      desc: 'Masukkan PIN Anda saat ini untuk menonaktifkan PIN aplikasi.',
+      inputType: 'password',
+      placeholder: 'Masukkan PIN saat ini',
+      confirmText: 'Nonaktifkan',
+      danger: true,
+      validate: (v) => {
+        if (!/^\d{4}$/.test(v)) return 'PIN harus 4 angka.';
+        return null;
+      }
+    });
+    if (confirmPin === null) return;
+
+    const hash = await hashPIN(confirmPin);
+    if (hash === savedPin) {
+      localStorage.removeItem(PIN_HASH_KEY);
+      showToast('PIN dinonaktifkan.', 'success');
       updatePinStatus();
     } else {
-      showToast('PIN tidak valid. Harus 4 angka.');
-    }
-  } else {
-    const confirmPin = prompt('Masukkan PIN Anda saat ini untuk mematikan PIN:');
-    if (confirmPin) {
-      const hash = await hashPIN(confirmPin);
-      if (hash === savedPin) {
-        localStorage.removeItem(PIN_HASH_KEY);
-        showToast('PIN dinonaktifkan.', 'success');
-        updatePinStatus();
-      } else {
-        showToast('PIN salah!');
-      }
+      showToast('PIN salah!');
     }
   }
 });
@@ -1108,11 +1271,18 @@ $('keyDel').addEventListener('click', () => {
   }
 });
 
-$('forgotPinBtn').addEventListener('click', () => {
-  if (confirm('PERINGATAN: Mereset PIN akan menghapus SEMUA data keuangan Anda secara permanen. Lanjutkan?')) {
-    localStorage.clear();
-    window.location.reload();
-  }
+// ⬇️ UPGRADE LEVEL 3: Reset PIN pakai Modal Konfirmasi (danger)
+$('forgotPinBtn').addEventListener('click', async () => {
+  const ok = await showConfirm({
+    title: '⚠️ Reset Aplikasi?',
+    desc: 'PERINGATAN: Mereset PIN akan menghapus SEMUA data keuangan Anda secara permanen. Tindakan ini tidak bisa dibatalkan.',
+    confirmText: 'Ya, Reset Semua',
+    danger: true
+  });
+  if (!ok) return;
+
+  localStorage.clear();
+  window.location.reload();
 });
 
 // ================= NAVIGASI & PROFIL =================
@@ -1135,12 +1305,27 @@ function renderProfile() {
 }
 renderProfile();
 
-document.getElementById('editProfileBtn').addEventListener('click', (e) => {
+// ⬇️ UPGRADE LEVEL 3: Edit nama profil pakai Modal input text
+document.getElementById('editProfileBtn').addEventListener('click', async (e) => {
   e.stopPropagation();
-  const newName = prompt('Masukkan nama panggilanmu:', profile.name);
-  if (newName && newName.trim() !== '') {
-    profile.name = newName.trim(); localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); renderProfile();
-  }
+  const newName = await showInput({
+    title: '✏️ Edit Nama',
+    desc: 'Masukkan nama panggilan yang ingin ditampilkan.',
+    inputType: 'text',
+    placeholder: 'Nama panggilan',
+    confirmText: 'Simpan',
+    validate: (v) => {
+      if (!v) return 'Nama tidak boleh kosong.';
+      if (v.length > 30) return 'Nama maksimal 30 karakter.';
+      return null;
+    }
+  });
+  if (newName === null) return;
+
+  profile.name = newName;
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  renderProfile();
+  showToast('Nama berhasil diubah.', 'success');
 });
 
 const photoInput = document.getElementById('photoInput');
@@ -1156,78 +1341,24 @@ photoInput.addEventListener('change', (e) => {
   }
 });
 
-// ================= CUSTOM MODAL FUNCTION =================
-function showModal({ title, desc, inputType = 'text', placeholder = '', confirmText = 'Simpan' }) {
-  return new Promise((resolve) => {
-    const modal = $('customModal');
-    const modalTitle = $('modalTitle');
-    const modalDesc = $('modalDesc');
-    const modalInput = $('modalInput');
-    const modalError = $('modalError');
-    const modalConfirmBtn = $('modalConfirmBtn');
-    const modalCancelBtn = $('modalCancelBtn');
-    const modalCloseBtn = $('modalCloseBtn');
-
-    // Atur konten modal
-    modalTitle.textContent = title;
-    modalDesc.textContent = desc;
-    modalInput.type = inputType;
-    modalInput.placeholder = placeholder;
-    modalInput.value = '';
-    modalConfirmBtn.textContent = confirmText;
-    modalError.classList.add('hidden');
-    modalInput.classList.remove('error');
-
-    // Tampilkan modal
-    modal.classList.remove('hidden');
-    setTimeout(() => modalInput.focus(), 100);
-
-    // Fungsi untuk menutup modal
-    const closeModal = (value) => {
-      modal.classList.add('hidden');
-      // Bersihkan event listener agar tidak menumpuk
-      modalConfirmBtn.onclick = null;
-      modalCancelBtn.onclick = null;
-      modalCloseBtn.onclick = null;
-      modalInput.onkeydown = null;
-      resolve(value);
-    };
-
-    // Event listener
-    modalConfirmBtn.onclick = () => {
-      if (inputType === 'password' && modalInput.value.trim() === '') {
-        modalError.textContent = 'Password tidak boleh kosong!';
-        modalError.classList.remove('hidden');
-        modalInput.classList.add('error');
-        return;
-      }
-      closeModal(modalInput.value);
-    };
-
-    modalCancelBtn.onclick = () => closeModal(null);
-    modalCloseBtn.onclick = () => closeModal(null);
-    
-    modalInput.onkeydown = (e) => {
-      if (e.key === 'Enter') modalConfirmBtn.click();
-    };
-  });
-}
-
-// ================= BACKUP TERENKRIPSI (MENGGUNAKAN MODAL) =================
+// ================= BACKUP TERENKRIPSI (MODAL) =================
 document.getElementById('btn-backup').addEventListener('click', async () => {
-  const password = await showModal({
-    title: '🔐 Enkripsi Backup',
-    desc: 'Buat password untuk mengenkripsi file backup ini. (Wajib diingat!)',
+  const password = await showInput({
+    title: '🔐 Backup Terenkripsi',
+    desc: 'Buat password untuk mengenkripsi file backup ini. Password ini WAJIB diingat karena diperlukan saat restore.',
     inputType: 'password',
-    placeholder: 'Masukkan password...',
-    confirmText: 'Backup Sekarang'
+    placeholder: 'Buat password (min. 4 karakter)',
+    confirmText: 'Backup Sekarang',
+    validate: (v) => {
+      if (!v) return 'Password tidak boleh kosong.';
+      if (v.length < 4) return 'Password minimal 4 karakter.';
+      return null;
+    }
   });
-
-  if (!password) return; // Batal atau kosong
+  if (password === null) return;
 
   const dataToBackup = { transactions, budgets, streak, profile, debts, dreams, customCategories };
   const dataStr = JSON.stringify(dataToBackup);
-  
   const encrypted = CryptoJS.AES.encrypt(dataStr, password).toString();
   
   const blob = new Blob([encrypted], { type: 'application/json' });
@@ -1241,7 +1372,7 @@ document.getElementById('btn-backup').addEventListener('click', async () => {
   showToast("Backup berhasil diunduh dan diamankan!", 'success');
 });
 
-// ================= RESTORE TERENKRIPSI (MENGGUNAKAN MODAL) =================
+// ================= RESTORE TERENKRIPSI (MODAL) =================
 const restoreInput = document.getElementById('restoreInput');
 document.getElementById('btn-restore').addEventListener('click', () => { restoreInput.click(); });
 
@@ -1249,44 +1380,48 @@ restoreInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  const password = await showModal({
-    title: '🔓 Buka Backup',
-    desc: 'Masukkan password untuk membuka file backup ini.',
-    inputType: 'password',
-    placeholder: 'Masukkan password...',
-    confirmText: 'Buka File'
-  });
-
-  if (!password) {
-    restoreInput.value = '';
-    return;
-  }
-
   const reader = new FileReader();
-  reader.onload = function(event) {
-    try {
-      const encryptedData = event.target.result;
-      const decryptedBytes = CryptoJS.AES.decrypt(encryptedData, password);
-      const decryptedStr = decryptedBytes.toString(CryptoJS.enc.Utf8);
+  reader.onload = async function(event) {
+    const encryptedData = event.target.result;
 
-      if (!decryptedStr) throw new Error("Password salah.");
+    const password = await showInput({
+      title: '📂 Restore Data',
+      desc: `Masukkan password yang digunakan saat membuat file backup "${file.name}".`,
+      inputType: 'password',
+      placeholder: 'Password backup',
+      confirmText: 'Buka File',
+      validate: (v) => {
+        if (!v) return 'Password tidak boleh kosong.';
+        if (v.length < 4) return 'Password minimal 4 karakter.';
+        return null;
+      }
+    });
+
+    if (password === null) {
+      restoreInput.value = '';
+      return;
+    }
+
+    try {
+      const decryptedStr = CryptoJS.AES.decrypt(encryptedData, password).toString(CryptoJS.enc.Utf8);
+      if (!decryptedStr) throw new Error('Password salah atau file korup.');
 
       const parsedData = JSON.parse(decryptedStr);
-      if (parsedData.transactions && parsedData.profile) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData.transactions));
-        localStorage.setItem(BUDGET_KEY, JSON.stringify(parsedData.budgets || {}));
-        localStorage.setItem(STREAK_KEY, JSON.stringify(parsedData.streak || { count: 0, lastDate: null }));
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(parsedData.profile));
-        localStorage.setItem(DEBT_KEY, JSON.stringify(parsedData.debts || []));
-        localStorage.setItem(DREAM_KEY, JSON.stringify(parsedData.dreams || []));
-        localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(parsedData.customCategories || []));
-        showToast('Data berhasil dipulihkan!', 'success'); 
-        window.location.reload();
-      } else { 
-        showToast('Format file backup tidak valid.'); 
+      if (!parsedData.transactions || !parsedData.profile) {
+        throw new Error('Format file backup tidak valid.');
       }
-    } catch (err) { 
-      showToast('Gagal membuka file. Pastikan password benar.'); 
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData.transactions));
+      localStorage.setItem(BUDGET_KEY, JSON.stringify(parsedData.budgets || {}));
+      localStorage.setItem(STREAK_KEY, JSON.stringify(parsedData.streak || { count: 0, lastDate: null }));
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(parsedData.profile));
+      localStorage.setItem(DEBT_KEY, JSON.stringify(parsedData.debts || []));
+      localStorage.setItem(DREAM_KEY, JSON.stringify(parsedData.dreams || []));
+      localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(parsedData.customCategories || []));
+      showToast('Data berhasil dipulihkan!', 'success');
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+      showToast(err.message || 'Gagal membuka file. Pastikan password benar.');
     } finally {
       restoreInput.value = '';
     }
@@ -1378,18 +1513,13 @@ function showToast(message, type = 'error') {
   const toastMsg = $('toastMsg');
   const undoBtn = $('undoBtn');
   
-  // Sembunyikan tombol urungkan untuk notifikasi umum
   undoBtn.style.display = 'none'; 
   toastMsg.textContent = message;
-  
-  // Atur warna sesuai tipe (error/success)
   toast.style.background = type === 'error' ? 'var(--expense)' : 'var(--income)';
-  
   toast.classList.add('show');
   
   setTimeout(() => {
     toast.classList.remove('show');
-    // Kembalikan warna dan tombol setelah animasi selesai
     setTimeout(() => {
       toast.style.background = ''; 
       undoBtn.style.display = 'block';
@@ -1399,7 +1529,6 @@ function showToast(message, type = 'error') {
 
 // ================= HILANGKAN LOADING SCREEN =================
 window.addEventListener('load', () => {
-  // --- CEK PIN SAAT APLIKASI DIBUKA ---
   const savedPin = localStorage.getItem(PIN_HASH_KEY);
   if (savedPin) {
     $('lockScreen').classList.remove('hidden');
@@ -1407,9 +1536,8 @@ window.addEventListener('load', () => {
     $('lockScreen').classList.add('hidden');
   }
   
-  updatePinStatus(); // Update teks di menu profil
+  updatePinStatus();
 
-  // --- HILANGKAN LOADING SCREEN ---
   const loader = document.getElementById('loadingScreen');
   if (loader) {
     setTimeout(() => {

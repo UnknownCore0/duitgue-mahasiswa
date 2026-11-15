@@ -581,3 +581,7 @@ input[type="date"], input[type="month"] {
   border: 1px solid var(--border);
 }
 .btn-modal-secondary:hover:not(:disabled) { opacity: 0.85; }
+.btn-modal-danger {
+  background: linear-gradient(135deg, var(--expense), #b91c1c) !important;
+}
+.btn-modal-danger:hover:not(:disabled) { opacity: 0.9; }
