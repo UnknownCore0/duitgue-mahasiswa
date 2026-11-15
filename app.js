@@ -1608,9 +1608,8 @@ window.addEventListener('touchstart', () => {
   }
 }, { passive: true });
 document.getElementById('debugThemeBtn').addEventListener('click', () => {
-  const isDarkOS = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const currentAppTheme = document.documentElement.dataset.theme;
-  const manualMode = localStorage.getItem('theme-manual-mahasiswa');
-  
-  alert(`OS Gelap? : ${isDarkOS}\nTema Aplikasi: ${currentAppTheme}\nMode Manual: ${manualMode || 'Tidak Ada'}`);
+  // Menghapus memori pilihan manual
+  localStorage.removeItem('theme-manual-mahasiswa');
+  alert('Memori Mode Manual berhasil dihapus! Aplikasi sekarang akan mengikuti tema OS (Auto).');
+  location.reload();
 });
