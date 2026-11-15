@@ -293,7 +293,7 @@ $('form').addEventListener('submit', e => {
   const myName = $('splitMyName').value.trim() || 'Kamu';
 
   if (isSplit && (splitPeople < 2 || !myName)) {
-    alert('Jumlah orang minimal 2 dan nama pembayar wajib diisi.');
+    showToast('Jumlah orang minimal 2 dan nama pembayar wajib diisi.');
     return;
   }
 
@@ -388,7 +388,7 @@ function resetForm() {
 
 // ================= EXPORT CSV =================
 $('exportBtn').addEventListener('click', () => {
-  if (transactions.length === 0) return alert('Belum ada data transaksi.');
+  if (transactions.length === 0) return showToast('Belum ada data transaksi.');
   const headers = ['Tanggal', 'Jenis', 'Kategori', 'Keterangan', 'Jumlah (Rp)'];
   const rows = transactions.map(t => [t.date, t.type === 'income' ? 'Pemasukan' : 'Pengeluaran', t.category, t.desc, t.amount]);
   const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -1009,7 +1009,7 @@ $('categoryForm').addEventListener('submit', (e) => {
   if (!name) return;
   
   if (customCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-    alert('Kategori dengan nama tersebut sudah ada!');
+    showToast('Kategori dengan nama tersebut sudah ada!');
     return;
   }
   
@@ -1057,10 +1057,10 @@ $('btn-security').addEventListener('click', async () => {
     if (newPin && newPin.length === 4 && /^\d+$/.test(newPin)) {
       const hash = await hashPIN(newPin);
       localStorage.setItem(PIN_HASH_KEY, hash);
-      alert('PIN berhasil dibuat!');
+      showToast('PIN berhasil dibuat!', 'success');
       updatePinStatus();
     } else {
-      alert('PIN tidak valid. Harus 4 angka.');
+      showToast('PIN tidak valid. Harus 4 angka.');
     }
   } else {
     const confirmPin = prompt('Masukkan PIN Anda saat ini untuk mematikan PIN:');
@@ -1068,10 +1068,10 @@ $('btn-security').addEventListener('click', async () => {
       const hash = await hashPIN(confirmPin);
       if (hash === savedPin) {
         localStorage.removeItem(PIN_HASH_KEY);
-        alert('PIN dinonaktifkan.');
+        showToast('PIN dinonaktifkan.', 'success');
         updatePinStatus();
       } else {
-        alert('PIN salah!');
+        showToast('PIN salah!');
       }
     }
   }
@@ -1160,7 +1160,7 @@ photoInput.addEventListener('change', (e) => {
 document.getElementById('btn-backup').addEventListener('click', () => {
   const password = prompt("Buat Password untuk mengenkripsi file backup ini (Wajib diingat!):");
   if (!password) {
-    alert("Backup dibatalkan. Password diperlukan untuk mengamankan data.");
+    showToast("Backup dibatalkan. Password diperlukan untuk mengamankan data.");
     return;
   }
 
@@ -1177,7 +1177,7 @@ document.getElementById('btn-backup').addEventListener('click', () => {
   link.click();
   URL.revokeObjectURL(url);
   
-  alert("Backup berhasil diunduh dan diamankan dengan password!");
+  showToast("Backup berhasil diunduh dan diamankan!", 'success');
 });
 
 // ================= RESTORE TERENKRIPSI =================
@@ -1194,7 +1194,7 @@ restoreInput.addEventListener('change', (e) => {
         
         const password = prompt("Masukkan password untuk membuka file backup ini:");
         if (!password) {
-          alert("Restore dibatalkan.");
+          showToast("Restore dibatalkan.");
           restoreInput.value = '';
           return;
         }
@@ -1215,13 +1215,13 @@ restoreInput.addEventListener('change', (e) => {
           localStorage.setItem(DEBT_KEY, JSON.stringify(parsedData.debts || []));
           localStorage.setItem(DREAM_KEY, JSON.stringify(parsedData.dreams || []));
           localStorage.setItem(CUSTOM_CAT_KEY, JSON.stringify(parsedData.customCategories || []));
-          alert('Data berhasil dipulihkan! Halaman akan dimuat ulang.'); 
+          showToast('Data berhasil dipulihkan!', 'success'); 
           window.location.reload();
         } else { 
-          alert('Format file backup tidak valid.'); 
+          showToast('Format file backup tidak valid.'); 
         }
       } catch (err) { 
-        alert('Gagal membuka file. Pastikan password benar dan file dari aplikasi Duit Gue.'); 
+        showToast('Gagal membuka file. Pastikan password benar.'); 
         restoreInput.value = '';
       }
     };
@@ -1305,6 +1305,31 @@ function renderChart() {
     group.appendChild(barInc); group.appendChild(barExp); group.appendChild(label);
     chartContainer.appendChild(group);
   });
+}
+
+// ================= TOAST NOTIFICATION =================
+function showToast(message, type = 'error') {
+  const toast = $('toast');
+  const toastMsg = $('toastMsg');
+  const undoBtn = $('undoBtn');
+  
+  // Sembunyikan tombol urungkan untuk notifikasi umum
+  undoBtn.style.display = 'none'; 
+  toastMsg.textContent = message;
+  
+  // Atur warna sesuai tipe (error/success)
+  toast.style.background = type === 'error' ? 'var(--expense)' : 'var(--income)';
+  
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+    // Kembalikan warna dan tombol setelah animasi selesai
+    setTimeout(() => {
+      toast.style.background = ''; 
+      undoBtn.style.display = 'block';
+    }, 300);
+  }, 3000);
 }
 
 // ================= HILANGKAN LOADING SCREEN =================
