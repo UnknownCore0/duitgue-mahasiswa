@@ -24,9 +24,17 @@ function getEmoji(cat) {
   return EMOJI[cat] || '✨';
 }
 
+// 🔥 PERBAIKAN 1: loadData kebal dari JSON rusak
 function loadData(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key)) || fallback; }
-  catch { return fallback; }
+  try {
+    const item = localStorage.getItem(key);
+    if (!item || item === 'undefined' || item === 'null') return fallback;
+    const parsed = JSON.parse(item);
+    return parsed !== null ? parsed : fallback;
+  } catch (e) {
+    console.warn(`Data rusak di localStorage untuk key "${key}", menggunakan data default.`);
+    return fallback;
+  }
 }
 
 let transactions = loadData(STORAGE_KEY, []);
@@ -342,6 +350,15 @@ document.addEventListener('visibilitychange', () => {
     }
   }
 });
+
+document.addEventListener('touchstart', () => {
+  if (!localStorage.getItem(THEME_MANUAL_KEY)) {
+    const sysTheme = getSystemTheme();
+    if (document.documentElement.dataset.theme !== sysTheme) {
+      applyTheme(sysTheme, document.documentElement.dataset.color);
+    }
+  }
+}, { passive: true });
 // ================= END THEME =================
 
 function updateStreak() {
